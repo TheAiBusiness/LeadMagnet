@@ -65,14 +65,18 @@ export function Footer() {
           © {new Date().getFullYear()} The AI Business. Todos los derechos reservados.
         </p>
         <div className="flex gap-6">
-          {["Privacidad", "Términos", "Contacto"].map((link) => (
+          {[
+            { label: "Privacidad", hash: "privacidad" },
+            { label: "Términos", hash: "terminos" },
+            { label: "Contacto", hash: "contacto" },
+          ].map(({ label, hash }) => (
             <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
+              key={hash}
+              href={`#${hash}`}
               className="text-[#0B0B0B]/30 hover:text-[#0B0B0B] transition-colors duration-300"
               style={{ fontSize: "0.78rem", fontWeight: 400 }}
             >
-              {link}
+              {label}
             </a>
           ))}
         </div>

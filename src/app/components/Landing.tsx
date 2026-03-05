@@ -6,6 +6,7 @@ import { Benefits } from "./Benefits";
 import { Process } from "./Process";
 import { FAQ } from "./FAQ";
 import { Contact } from "./Contact";
+import { Legal } from "./Legal";
 import { Footer } from "./Footer";
 import { MobileBottomCTA } from "./MobileBottomCTA";
 import { WhatsAppButton } from "./WhatsAppButton";
@@ -37,6 +38,7 @@ export function Landing() {
       </div>
       <FAQ />
       <Contact />
+      <Legal />
       <Footer />
       <MobileBottomCTA />
       <WhatsAppButton />
