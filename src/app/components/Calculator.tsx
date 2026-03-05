@@ -446,7 +446,7 @@ export function Calculator({ id }: CalculatorProps) {
         }
       } catch { /* ignore */ }
 
-      /* ── 3. Patch computed oklch on element styles inside report ── */
+      /* ── 3. Forzar colores del informe a inline (valores ya resueltos a RGB por el navegador); html2canvas no soporta oklch ── */
       const savedInline: { el: HTMLElement; prop: string; original: string }[] = [];
       const allEls = [el, ...Array.from(el.querySelectorAll("*"))];
       const COLOR_PROPS = [
@@ -460,33 +460,30 @@ export function Calculator({ id }: CalculatorProps) {
         if (!(node instanceof HTMLElement)) return;
         const comp = getComputedStyle(node);
         COLOR_PROPS.forEach((camel) => {
-          const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
-          const v = comp.getPropertyValue(kebab);
-          if (v && v.includes("oklch")) {
-            savedInline.push({ el: node, prop: camel, original: (node.style as any)[camel] || "" });
-            (node.style as any)[camel] = resolveOklch(v);
-          }
+          const kebab = camel.replace(/[A-Z]/g, (ch) => "-" + ch.toLowerCase());
+          let v = comp.getPropertyValue(kebab);
+          if (!v) return;
+          if (v.includes("oklch")) v = resolveOklch(v);
+          const prev = (node.style as any)[camel] ?? node.style.getPropertyValue(kebab) ?? "";
+          savedInline.push({ el: node, prop: camel, original: prev });
+          (node.style as any)[camel] = v;
         });
-        /* Also patch CSS custom properties (--*) containing oklch */
-        const inlineStyle = node.getAttribute("style") || "";
-        const cssVarMatches = inlineStyle.match(/--[\w-]+/g);
-        if (cssVarMatches) {
-          cssVarMatches.forEach((varName) => {
-            const v = comp.getPropertyValue(varName).trim();
-            if (v && v.includes("oklch")) {
-              savedInline.push({ el: node, prop: varName, original: node.style.getPropertyValue(varName) });
-              node.style.setProperty(varName, resolveOklch(v));
-            }
-          });
-        }
       });
 
-      /* ── 4. Capture ── */
+      /* ── 4. Capture (onclone: eliminar oklch del clon por si html2canvas reparsea estilos) ── */
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        onclone: (_, clonedEl) => {
+          clonedEl.querySelectorAll("style").forEach((styleEl) => {
+            const txt = styleEl.textContent || "";
+            if (txt.includes("oklch")) {
+              styleEl.textContent = txt.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m));
+            }
+          });
+        },
       });
 
       /* ── 5. Restore <style> tag text ── */
