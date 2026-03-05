@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const setupSG = () => { const k = process.env.SENDGRID_API_KEY; if (k) sgMail.setApiKey(k); return !!k; };
-const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "hola@theaibusiness.com", name: process.env.SENDGRID_FROM_NAME || "The AI Business" });
+const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "info@theaibusiness.com", name: process.env.SENDGRID_FROM_NAME || "The AI Business" });
 const notify = () => process.env.NOTIFY_EMAIL || from().email;
 const calendlyUrl = () => process.env.CALENDLY_URL || "https://theaibusiness.com/#contacto";
 const fmt = (n: number) => n.toLocaleString("es-ES");
