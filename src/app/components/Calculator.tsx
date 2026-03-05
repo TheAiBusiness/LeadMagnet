@@ -378,6 +378,7 @@ export function Calculator({ id }: CalculatorProps) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
+  const [emailReportSent, setEmailReportSent] = useState(false);
 
   /* PDF download */
   const reportRef = useRef<HTMLDivElement>(null);
@@ -787,23 +788,26 @@ export function Calculator({ id }: CalculatorProps) {
     try { localStorage.setItem("ai-business:lead", JSON.stringify(payload)); } catch {}
 
     const apiBase = import.meta.env.VITE_API_URL || "";
+    let sent = false;
     try {
       setSubmitting(true);
-      await fetch(`${apiBase}/api/send-report`, {
+      const res = await fetch(`${apiBase}/api/send-report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      sent = res.ok;
     } catch { /* fallback: user can still download PDF */ }
     finally { setSubmitting(false); }
 
+    setEmailReportSent(sent);
     setDone(true);
   };
   const reset = () => {
     setStep(1); setDir(-1); setSector(""); setTeamSize(""); setRevenue("");
     setUsesAI(null); setTasks([]); setHours(20); setCostH(25); setLeads(500);
     setRespTime(30); setAvgTicket(200); setH24(null); setPriority(""); setName(""); setEmail("");
-    setDone(false); setErr("");
+    setDone(false); setErr(""); setEmailReportSent(false);
   };
 
   const fmt = (n: number) => n.toLocaleString("es-ES");
@@ -1138,10 +1142,22 @@ export function Calculator({ id }: CalculatorProps) {
                   initial={{ opacity: 0, filter: "blur(8px)" }}
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.4, delay: 0.4 }}
-                  className="text-[#0B0B0B]/40 mb-8" style={{ fontSize: "0.95rem" }}
+                  className={`text-[#0B0B0B]/40 ${emailReportSent ? "mb-8" : "mb-2"}`} style={{ fontSize: "0.95rem" }}
                 >
-                  Informe enviado a <span className="text-[#0B0B0B]" style={{ fontWeight: 500 }}>{email}</span>. Revisa tu bandeja.
+                  {emailReportSent
+                    ? <>Informe enviado a <span className="text-[#0B0B0B]" style={{ fontWeight: 500 }}>{email}</span>. Revisa tu bandeja.</>
+                    : <>Tu informe está listo. Descárgalo en PDF aquí abajo.</>}
                 </motion.p>
+                {!emailReportSent && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-amber-700/90 mb-6" style={{ fontSize: "0.85rem" }}
+                  >
+                    No pudimos enviar el email; puedes descargar el PDF sin problema.
+                  </motion.p>
+                )}
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
                   animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
