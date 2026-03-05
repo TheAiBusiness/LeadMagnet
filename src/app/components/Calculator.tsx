@@ -470,19 +470,15 @@ export function Calculator({ id }: CalculatorProps) {
         });
       });
 
-      /* ── 4. Capture (onclone: eliminar oklch del clon por si html2canvas reparsea estilos) ── */
+      /* ── 4. Capture — eliminar TODAS las hojas de estilo del clon.
+            Los colores ya están inline (paso 3), así html2canvas no parsea oklch. ── */
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
-        onclone: (_, clonedEl) => {
-          clonedEl.querySelectorAll("style").forEach((styleEl) => {
-            const txt = styleEl.textContent || "";
-            if (txt.includes("oklch")) {
-              styleEl.textContent = txt.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m));
-            }
-          });
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((s) => s.remove());
         },
       });
 
