@@ -382,12 +382,17 @@ export function Calculator({ id }: CalculatorProps) {
   /* PDF download */
   const reportRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const downloadPDF = useCallback(async () => {
     if (!reportRef.current || downloading) return;
     setDownloading(true);
+    setPdfError("");
     try {
       const el = reportRef.current;
+      /* Asegurar que el informe está en vista para html2canvas */
+      el.scrollIntoView({ behavior: "instant", block: "start" });
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 100)));
 
       /* ── Helper: resolve any oklch() → rgb() via browser engine ── */
       const resolveOklch = (raw: string): string => {
@@ -544,9 +549,25 @@ export function Calculator({ id }: CalculatorProps) {
       }
 
       const safeName = (name || "empresa").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      pdf.save(`informe-ai-${safeName}.pdf`);
+      const fileName = `informe-ai-${safeName}.pdf`;
+      /* Descarga por blob + link: más fiable que pdf.save() tras async en algunos navegadores */
+      try {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {
+        pdf.save(fileName);
+      }
     } catch (e) {
       console.error("PDF generation error:", e);
+      setPdfError("No se pudo generar el PDF. Inténtalo de nuevo.");
     } finally {
       setDownloading(false);
     }
@@ -1155,6 +1176,11 @@ export function Calculator({ id }: CalculatorProps) {
                     {downloading ? "Generando..." : "Descargar PDF"}
                   </motion.button>
                 </motion.div>
+                {pdfError && (
+                  <p className="text-red-600 text-sm mb-4" style={{ fontWeight: 500 }}>
+                    {pdfError}
+                  </p>
+                )}
 
                 {/* ── Scroll hint ── */}
                 <motion.div
