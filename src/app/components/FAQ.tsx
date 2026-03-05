@@ -4,10 +4,6 @@ import { Plus, Minus } from "lucide-react";
 
 const faqs = [
   {
-    q: "¿Mis datos están seguros?",
-    a: "Absolutamente. Trabajamos con infraestructuras encriptadas end-to-end y cumplimos con GDPR. Nunca accedemos a datos sensibles sin autorización explícita.",
-  },
-  {
     q: "¿Cuánto tiempo tarda la implementación?",
     a: "Depende de la complejidad, pero la mayoría de proyectos están operativos en 2–6 semanas. Empezamos con un MVP funcional en los primeros días.",
   },
@@ -16,12 +12,12 @@ const faqs = [
     a: "No. Nos encargamos de todo: diseño, desarrollo, integración y mantenimiento. Solo necesitas a alguien que nos dé contexto de negocio.",
   },
   {
-    q: "¿Qué herramientas se integran?",
-    a: "Conectamos con CRMs (HubSpot, Salesforce), ERPs, plataformas de ecommerce (Shopify, WooCommerce), Slack, Notion, y prácticamente cualquier API.",
-  },
-  {
     q: "¿Cuál es la inversión mínima?",
     a: "Cada proyecto es diferente. Tras la auditoría inicial gratuita, te presentamos un plan con presupuesto cerrado y ROI estimado.",
+  },
+  {
+    q: "¿Mis datos están seguros?",
+    a: "Absolutamente. Trabajamos con infraestructuras encriptadas end-to-end y cumplimos con GDPR. Nunca accedemos a datos sensibles sin autorización explícita.",
   },
 ];
 
