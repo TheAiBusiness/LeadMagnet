@@ -144,7 +144,7 @@ export function Hero({ onProcessClick }: HeroProps) {
           <BlurWords text="perdiendo por" delay={0.5} />
           {" "}
           <motion.span
-            className="inline-block italic origin-center"
+            className="inline-block font-semibold origin-center"
             style={{ textShadow: "0 4px 24px rgba(11,11,11,0.25)" }}
             initial={{
               opacity: 0,
