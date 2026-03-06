@@ -120,11 +120,11 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
       html: reportHtml,
     });
 
-    // Notificación interna
+    // Notificación interna (usamos esc() directo para no depender de variables intermedias)
     await sgMail.send({
       to: notify(), from: from(),
       subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(safeCalc.total)}/mes`,
-      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${sTeam}\nFacturación: ${sRevenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${sResp}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${sPriority}\n\nAhorro/mes: € ${fmt(safeCalc.monthlySav)}\nIngreso: € ${fmt(safeCalc.addRev)}\nTotal/mes: € ${fmt(safeCalc.total)}\nAnual: € ${fmt(safeCalc.annual)}\nScore: ${esc(safeCalc.score)}/100</pre>`,
+      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${esc(respTime)}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${esc(priority)}\n\nAhorro/mes: € ${fmt(safeCalc.monthlySav)}\nIngreso: € ${fmt(safeCalc.addRev)}\nTotal/mes: € ${fmt(safeCalc.total)}\nAnual: € ${fmt(safeCalc.annual)}\nScore: ${esc(safeCalc.score)}/100</pre>`,
     });
 
     // Guardar lead en Supabase
@@ -160,11 +160,18 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 
     res.json({ ok: true });
   } catch (err: unknown) {
-    const sgErr = err as { response?: { body?: unknown; statusCode?: number } };
+    const sgErr = err as { response?: { body?: { errors?: Array<{ message?: string }> }; statusCode?: number } };
     const msg = sgErr?.response?.body || err;
     console.error("SendGrid /api/send-report error:", msg);
     if (err instanceof Error) console.error("Stack:", err.stack);
-    res.status(500).json({ error: "Failed to send" });
+    // Mensaje seguro para ver en el navegador (pestaña Red) sin exponer datos sensibles
+    let hint = "Failed to send";
+    if (sgErr?.response?.body && typeof sgErr.response.body === "object") {
+      const body = sgErr.response.body as { errors?: Array<{ message?: string }> };
+      const first = body.errors?.[0]?.message;
+      if (typeof first === "string") hint = first;
+    } else if (err instanceof Error) hint = err.message.slice(0, 120);
+    res.status(500).json({ error: "Failed to send", hint });
   }
 });
 
