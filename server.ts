@@ -152,12 +152,6 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
       });
     }
 
-    // Webhook opcional
-    const webhookUrl = process.env.LEAD_WEBHOOK_URL || "";
-    if (webhookUrl) {
-      fetch(webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req.body) }).catch(() => {});
-    }
-
     res.json({ ok: true });
   } catch (err: any) {
     console.error("SendGrid error:", err?.response?.body || err);
