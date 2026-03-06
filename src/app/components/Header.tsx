@@ -64,6 +64,9 @@ export function Header() {
         <button
           className="md:hidden p-2 cursor-pointer"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav"
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -71,7 +74,9 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <motion.div
+        <motion.nav
+          id="mobile-nav"
+          aria-label="Menú principal"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="md:hidden bg-white/95 backdrop-blur-2xl border-t border-[#EAEAEA]/40 px-6 py-5 flex flex-col gap-4"
@@ -98,7 +103,7 @@ export function Header() {
           >
             Calcular →
           </button>
-        </motion.div>
+        </motion.nav>
       )}
     </motion.header>
   );

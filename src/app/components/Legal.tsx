@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
+import { CONTACT_EMAIL } from "../lib/constants";
 
 export function Legal() {
   const ref = useRef(null);
@@ -30,8 +31,8 @@ export function Legal() {
             </p>
             <p>
               Puedes ejercer derechos de acceso, rectificación, supresión, limitación y portabilidad escribiendo a{" "}
-              <a href="mailto:info@theaibusiness.com" className="text-[#0B0B0B] underline hover:no-underline">
-                info@theaibusiness.com
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0B0B0B] underline hover:no-underline">
+                {CONTACT_EMAIL}
               </a>
               . Tienes derecho a reclamar ante la autoridad de control (AEPD).
             </p>
@@ -56,8 +57,8 @@ export function Legal() {
             </p>
             <p>
               Para cualquier cuestión legal o comercial:{" "}
-              <a href="mailto:info@theaibusiness.com" className="text-[#0B0B0B] underline hover:no-underline">
-                info@theaibusiness.com
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0B0B0B] underline hover:no-underline">
+                {CONTACT_EMAIL}
               </a>
               .
             </p>

@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { CONTACT_EMAIL } from "../lib/constants";
 import {
   Euro,
   TrendingUp,
@@ -299,7 +300,7 @@ export function EmailReport({ name, email, sector, teamSize, revenue, usesAI, ta
         {/* Email header */}
         <div className="px-6 py-4 border-b border-[#F0F0F0] bg-[#FAFAFA]">
           <div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><Mail size={13} className="text-[#0B0B0B]/25"/><span className="text-[#0B0B0B]/30" style={{ fontSize: "0.65rem" }}>Vista previa del email</span></div><span className="text-[#0B0B0B]/20" style={{ fontSize: "0.6rem" }}>{today}</span></div>
-          <div className="space-y-1"><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">Para:</span> {email}</p><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">De:</span> info@theaibusiness.com</p><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">Asunto:</span>{" "}<span className="text-[#0B0B0B]/60" style={{ fontWeight: 500 }}>{name}, tu informe AI personalizado está listo</span></p></div>
+          <div className="space-y-1"><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">Para:</span> {email}</p><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">De:</span> {CONTACT_EMAIL}</p><p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}><span className="text-[#0B0B0B]/25">Asunto:</span>{" "}<span className="text-[#0B0B0B]/60" style={{ fontWeight: 500 }}>{name}, tu informe AI personalizado está listo</span></p></div>
         </div>
 
         <div className="px-6 py-8 space-y-8">
@@ -465,7 +466,7 @@ export function EmailReport({ name, email, sector, teamSize, revenue, usesAI, ta
 
           {/* Footer */}
           <div className="pt-6 border-t border-[#F0F0F0] text-center">
-            <p className="text-[#0B0B0B]/15" style={{ fontSize: "0.55rem", lineHeight: 1.6 }}>The AI Business · info@theaibusiness.com<br/>* Todas las estimaciones están basadas en benchmarks del sector y los datos proporcionados.<br/>Los resultados reales pueden variar según la implementación.</p>
+            <p className="text-[#0B0B0B]/15" style={{ fontSize: "0.55rem", lineHeight: 1.6 }}>The AI Business · {CONTACT_EMAIL}<br/>* Todas las estimaciones están basadas en benchmarks del sector y los datos proporcionados.<br/>Los resultados reales pueden variar según la implementación.</p>
           </div>
         </div>
       </div>

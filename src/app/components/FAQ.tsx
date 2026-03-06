@@ -80,6 +80,8 @@ export function FAQ() {
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : i)}
                     className="w-full flex items-center justify-between p-6 md:p-7 cursor-pointer"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-panel-${i}`}
                   >
                     <span
                       className="text-left text-[#0B0B0B]"
@@ -102,6 +104,8 @@ export function FAQ() {
                   <AnimatePresence>
                     {isOpen && (
                       <motion.div
+                        id={`faq-panel-${i}`}
+                        role="region"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}

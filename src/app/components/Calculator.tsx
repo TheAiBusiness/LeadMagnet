@@ -15,194 +15,11 @@ import {
 import { EmailReport } from "./EmailReport";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
-
-/* ─── Data ─── */
-const SECTORS = ["Ecommerce", "Servicios", "Inmobiliaria", "Salud", "Logística", "Agencia", "SaaS", "Otros"];
-
-/* ─── Context-aware slider engine (uses ALL previous answers) ─── */
-type SliderCfg = { label: string; min: number; max: number; step?: number; unit: string };
-type MetricsConfig = { subtitle: string; ticketLabel: string; sliders: [SliderCfg, SliderCfg, SliderCfg, SliderCfg] };
-
-const TASK_SHORT: Record<string, string> = {
-  "Atención cliente": "soporte", Emails: "emails", "Entrada datos": "datos",
-  Informes: "informes", Leads: "leads", Agenda: "agenda",
-  Facturación: "facturación", Contenido: "contenido",
-};
-
-function buildMetricsConfig(
-  _sector: string, _teamSize: string, _revenue: string,
-  _usesAI: boolean | null, _tasks: string[],
-): MetricsConfig {
-  const sector = _sector || "Otros";
-  const teamSize = _teamSize || "6 – 20";
-  const tasks = _tasks || [];
-  const usesAI = _usesAI;
-
-  /* ── Contextual subtitle ── */
-  const teamMap: Record<string, string> = {
-    "1 – 5": "un equipo pequeño de 1–5",
-    "6 – 20": "un equipo de 6–20",
-    "21 – 50": "una empresa de 21–50",
-    "50 +": "una organización de +50",
-  };
-  const teamDesc = teamMap[teamSize] || "tu equipo";
-  const aiHint = usesAI
-    ? " — ya usáis IA, ajusta el margen real de mejora"
-    : " — sin IA activa, el potencial de ahorro es mayor";
-  const subtitle = `Para ${teamDesc} personas en ${sector}${aiHint}.`;
-
-  /* ── Dynamic ranges based on team + revenue ── */
-  const teamRanges: Record<string, { maxH: number; maxVol: number }> = {
-    "1 – 5": { maxH: 40, maxVol: 1500 },
-    "6 – 20": { maxH: 60, maxVol: 3000 },
-    "21 – 50": { maxH: 80, maxVol: 5000 },
-    "50 +": { maxH: 80, maxVol: 5000 },
-  };
-  const tr = teamRanges[teamSize] || { maxH: 80, maxVol: 5000 };
-  const revIdx = REVENUES.findIndex((r) => r.label === _revenue);
-  const maxCost = revIdx >= 4 ? 120 : revIdx >= 3 ? 100 : revIdx >= 2 ? 80 : 60;
-
-  /* ── Task-aware short names (pick first 2) ── */
-  const shortTasks = tasks.slice(0, 2).map((t) => TASK_SHORT[t] || t.toLowerCase());
-  const taskFragment = shortTasks.length ? shortTasks.join(" y ").toUpperCase() : null;
-
-  /* ── SLIDER 1: Hours — what eats their time ── */
-  const hoursBase: Record<string, string> = {
-    Ecommerce: "HORAS PROCESANDO PEDIDOS",
-    Servicios: "HORAS EN GESTIÓN ADMINISTRATIVA",
-    Inmobiliaria: "HORAS EN GESTIÓN DE PROPIEDADES",
-    Salud: "HORAS EN TAREAS CLÍNICO-ADMIN",
-    Logística: "HORAS EN OPERATIVA MANUAL",
-    Agencia: "HORAS EN PRODUCCIÓN MANUAL",
-    SaaS: "HORAS EN OPS Y SOPORTE MANUAL",
-    Otros: "HORAS EN TAREAS REPETITIVAS",
-  };
-  const hoursLabel = taskFragment
-    ? `HORAS EN ${taskFragment} / SEM`
-    : `${hoursBase[sector] || hoursBase.Otros} / SEM`;
-
-  /* ── SLIDER 2: Cost — who's doing it (role × team size) ── */
-  const roleMap: Record<string, Record<string, string>> = {
-    "1 – 5": {
-      Ecommerce: "COSTE / HORA FUNDADOR–EQUIPO", SaaS: "COSTE / HORA FUNDADOR–DEV",
-      Agencia: "COSTE / HORA FUNDADOR–CREATIVO", Salud: "COSTE / HORA PROFESIONAL SANITARIO",
-      Inmobiliaria: "COSTE / HORA AGENTE", Logística: "COSTE / HORA RESPONSABLE OPS",
-      Servicios: "COSTE / HORA PROFESIONAL", Otros: "COSTE / HORA EMPLEADO",
-    },
-    "6 – 20": {
-      Ecommerce: "COSTE MEDIO / HORA EQUIPO", SaaS: "COSTE MEDIO / HORA DEVELOPER",
-      Agencia: "COSTE MEDIO / HORA EQUIPO CREATIVO", Salud: "COSTE MEDIO / HORA PERSONAL",
-      Inmobiliaria: "COSTE MEDIO / HORA AGENTE", Logística: "COSTE MEDIO / HORA OPERARIO",
-      Servicios: "COSTE MEDIO / HORA EQUIPO", Otros: "COSTE MEDIO / HORA EMPLEADO",
-    },
-    "21 – 50": {
-      Ecommerce: "COSTE MEDIO / HORA EMPLEADO", SaaS: "COSTE MEDIO / HORA EQUIPO TECH",
-      Agencia: "COSTE MEDIO / HORA EQUIPO", Salud: "COSTE MEDIO / HORA PERSONAL CLÍNICO",
-      Inmobiliaria: "COSTE MEDIO / HORA EQUIPO COMERCIAL", Logística: "COSTE MEDIO / HORA OPERARIO",
-      Servicios: "COSTE MEDIO / HORA EQUIPO", Otros: "COSTE MEDIO / HORA EMPLEADO",
-    },
-    "50 +": {
-      Ecommerce: "COSTE MEDIO / HORA DEPARTAMENTO", SaaS: "COSTE MEDIO / HORA EQUIPO TECH",
-      Agencia: "COSTE MEDIO / HORA EQUIPO", Salud: "COSTE MEDIO / HORA PERSONAL",
-      Inmobiliaria: "COSTE MEDIO / HORA RED DE AGENTES", Logística: "COSTE MEDIO / HORA PLANTILLA OPS",
-      Servicios: "COSTE MEDIO / HORA EQUIPO", Otros: "COSTE MEDIO / HORA PLANTILLA",
-    },
-  };
-  const costRoles = roleMap[teamSize] || roleMap["6 – 20"];
-  const costLabel = costRoles[sector] || costRoles.Otros || "COSTE MEDIO / HORA";
-
-  /* ── SLIDER 3: Volume — what flows through (sector × tasks) ── */
-  const volBase: Record<string, string> = {
-    Ecommerce: "PEDIDOS Y CONSULTAS", Servicios: "SOLICITUDES DE SERVICIO",
-    Inmobiliaria: "CONTACTOS DE INTERESADOS", Salud: "CITAS Y CONSULTAS",
-    Logística: "ENVÍOS E INCIDENCIAS", Agencia: "PROYECTOS Y SOLICITUDES",
-    SaaS: "TICKETS Y SIGNUPS", Otros: "CONSULTAS Y GESTIONES",
-  };
-  let volLabel = volBase[sector] || volBase.Otros;
-  if (tasks.includes("Leads") && tasks.includes("Atención cliente")) {
-    const ve: Record<string, string> = {
-      Ecommerce: "LEADS + CONSULTAS DE COMPRA", SaaS: "LEADS + TICKETS DE SOPORTE",
-      Agencia: "LEADS + SOLICITUDES DE PROYECTO", Salud: "PACIENTES NUEVOS + CONSULTAS",
-      Inmobiliaria: "LEADS + VISITAS SOLICITADAS", Logística: "NUEVOS CLIENTES + INCIDENCIAS",
-      Servicios: "LEADS + SOLICITUDES ENTRANTES", Otros: "LEADS + CONSULTAS ENTRANTES",
-    };
-    volLabel = ve[sector] || ve.Otros;
-  } else if (tasks.includes("Leads")) {
-    volLabel = ({ SaaS: "LEADS Y TRIALS", Inmobiliaria: "LEADS DE INTERESADOS", Salud: "PACIENTES NUEVOS" } as Record<string, string>)[sector] || "LEADS ENTRANTES";
-  } else if (tasks.includes("Atención cliente")) {
-    volLabel = ({ SaaS: "TICKETS DE SOPORTE", Salud: "CONSULTAS DE PACIENTES", Ecommerce: "CONSULTAS POST-VENTA" } as Record<string, string>)[sector] || "CONSULTAS DE CLIENTES";
-  }
-  volLabel += " / MES";
-
-  /* ── SLIDER 4: Response time — what are they waiting on ── */
-  const respBase: Record<string, string> = {
-    Ecommerce: "TIEMPO RESPUESTA AL COMPRADOR", Servicios: "TIEMPO DE RESPUESTA AL CLIENTE",
-    Inmobiliaria: "TIEMPO RESPUESTA AL INTERESADO", Salud: "TIEMPO DE ESPERA DEL PACIENTE",
-    Logística: "TIEMPO RESOLUCIÓN DE INCIDENCIA", Agencia: "TIEMPO DE ENTREGA AL CLIENTE",
-    SaaS: "TIEMPO DE PRIMERA RESPUESTA", Otros: "TIEMPO MEDIO DE RESPUESTA",
-  };
-  let respLabel = respBase[sector] || respBase.Otros;
-  if (tasks.includes("Atención cliente")) {
-    const rt: Record<string, string> = {
-      SaaS: "RESPUESTA A TICKET DE SOPORTE", Salud: "RESPUESTA A CONSULTA PACIENTE",
-      Ecommerce: "RESPUESTA A CONSULTA DE COMPRA", Inmobiliaria: "RESPUESTA A INTERESADO",
-      Logística: "RESPUESTA A INCIDENCIA", Agencia: "RESPUESTA AL CLIENTE",
-      Servicios: "RESPUESTA A SOLICITUD", Otros: "RESPUESTA A CLIENTE",
-    };
-    respLabel = rt[sector] || rt.Otros;
-  } else if (tasks.includes("Leads")) {
-    respLabel = "TIEMPO DE CONTACTO CON LEAD";
-  }
-
-  /* ── TICKET MEDIO label (sector-aware) ── */
-  const ticketLabels: Record<string, string> = {
-    Ecommerce: "TICKET MEDIO POR PEDIDO",
-    SaaS: "TICKET MEDIO POR SUSCRIPCIÓN",
-    Agencia: "TICKET MEDIO POR PROYECTO",
-    Servicios: "TICKET MEDIO POR SERVICIO",
-    Salud: "TICKET MEDIO POR CONSULTA",
-    Inmobiliaria: "COMISIÓN MEDIA POR OPERACIÓN",
-    Logística: "TICKET MEDIO POR ENVÍO",
-    Otros: "TICKET MEDIO POR OPERACIÓN",
-  };
-  const ticketLabel = ticketLabels[sector] || ticketLabels.Otros;
-
-  return {
-    subtitle,
-    ticketLabel,
-    sliders: [
-      { label: hoursLabel, min: 1, max: tr.maxH, unit: "h" },
-      { label: costLabel, min: 10, max: maxCost, step: 5, unit: "€/h" },
-      { label: volLabel, min: 10, max: tr.maxVol, step: 10, unit: "" },
-      { label: respLabel, min: 1, max: 240, unit: "min" },
-    ],
-  };
-}
-
-const TEAMS = [
-  { label: "1 – 5", multiplier: 3 },
-  { label: "6 – 20", multiplier: 12 },
-  { label: "21 – 50", multiplier: 35 },
-  { label: "50 +", multiplier: 70 },
-];
-const REVENUES = [
-  { label: "< 100 K €", value: 80000 },
-  { label: "100 K – 500 K €", value: 300000 },
-  { label: "500 K – 2 M €", value: 1200000 },
-  { label: "2 M – 10 M €", value: 5000000 },
-  { label: "> 10 M €", value: 15000000 },
-];
-const TASKS = [
-  { label: "Atención cliente", savings: 0.7 },
-  { label: "Emails", savings: 0.6 },
-  { label: "Entrada datos", savings: 0.85 },
-  { label: "Informes", savings: 0.75 },
-  { label: "Leads", savings: 0.65 },
-  { label: "Agenda", savings: 0.8 },
-  { label: "Facturación", savings: 0.7 },
-  { label: "Contenido", savings: 0.5 },
-];
-const PRIORITIES = ["Reducir costes", "Más ventas", "Mejor soporte", "Acelerar procesos"];
+import {
+  SECTORS, TEAMS, REVENUES, TASKS, PRIORITIES, TASK_SHORT,
+  buildMetricsConfig,
+} from "../lib/calculator-data";
+import type { SliderCfg, MetricsConfig } from "../lib/calculator-data";
 
 /* ─── Pill ─── */
 function Pill({ active, onClick, children, big, delay = 0, groupId, multi }: {
@@ -978,13 +795,15 @@ export function Calculator({ id }: CalculatorProps) {
                 </motion.p>
                 <div className="max-w-[440px] space-y-4">
                   <motion.div initial={{ opacity: 0, filter: "blur(10px)", y: 10 }} animate={{ opacity: 1, filter: "blur(0px)", y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-                    <input type="text" placeholder="Tu nombre" value={name}
+                    <label htmlFor="calc-name" className="sr-only">Nombre</label>
+                    <input id="calc-name" type="text" placeholder="Tu nombre" value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full px-0 py-3 bg-transparent border-b-2 border-[#E8E8E8] focus:border-[#0B0B0B] focus:outline-none transition-colors duration-300 placeholder:text-[#0B0B0B]/20 text-[#0B0B0B]"
                       style={{ fontSize: "1.3rem", fontWeight: 400 }} />
                   </motion.div>
                   <motion.div initial={{ opacity: 0, filter: "blur(10px)", y: 10 }} animate={{ opacity: 1, filter: "blur(0px)", y: 0 }} transition={{ duration: 0.5, delay: 0.38 }}>
-                    <input type="email" placeholder="tu@email.com" value={email}
+                    <label htmlFor="calc-email" className="sr-only">Email</label>
+                    <input id="calc-email" type="email" placeholder="tu@email.com" value={email}
                       onChange={(e) => { setEmail(e.target.value); setErr(""); }}
                       onKeyDown={(e) => e.key === "Enter" && submit()}
                       className={`w-full px-0 py-3 bg-transparent border-b-2 ${err ? "border-red-400" : "border-[#E8E8E8]"} focus:border-[#0B0B0B] focus:outline-none transition-colors duration-300 placeholder:text-[#0B0B0B]/20 text-[#0B0B0B]`}

@@ -1,14 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
 import { Calendar, Mail, Send, MessageCircle } from "lucide-react";
+import { CONTACT_EMAIL, WHATSAPP_NUMBER, CALENDLY_URL, API_BASE } from "../lib/constants";
 
 export function Contact() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
-
-  const contactEmail = useMemo(() => import.meta.env.VITE_CONTACT_EMAIL || "info@theaibusiness.com", []);
-  const calendlyUrl = useMemo(() => import.meta.env.VITE_CALENDLY_URL || "", []);
-  const whatsappNum = useMemo(() => import.meta.env.VITE_WHATSAPP_NUMBER || "", []);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,14 +15,13 @@ export function Contact() {
   const [sendError, setSendError] = useState("");
 
   const openCalendly = () => {
-    if (calendlyUrl) window.open(calendlyUrl, "_blank", "noopener,noreferrer");
+    if (CALENDLY_URL) window.open(CALENDLY_URL, "_blank", "noopener,noreferrer");
     else document.getElementById("contacto")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const openWhatsApp = () => {
     const text = encodeURIComponent("Hola, me gustaría saber más sobre vuestros servicios de IA.");
-    const num = whatsappNum || "376377048";
-    window.open(`https://wa.me/${num}?text=${text}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   const submit = async () => {
@@ -34,10 +30,9 @@ export function Contact() {
     if (!m) { setSendError("Escribe un mensaje"); return; }
     setSendError("");
 
-    const apiBase = import.meta.env.VITE_API_URL || "";
     try {
       setSending(true);
-      const res = await fetch(`${apiBase}/api/send-contact`, {
+      const res = await fetch(`${API_BASE}/api/send-contact`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: n, email: e, message: m }),
       });
@@ -46,7 +41,7 @@ export function Contact() {
     } catch {
       const subject = encodeURIComponent("Contacto — The AI Business");
       const body = encodeURIComponent(`${m}\n\n—\n${n || "Sin nombre"}\n${e}`);
-      window.location.href = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
       setSent(true);
     } finally { setSending(false); }
   };
@@ -105,13 +100,13 @@ export function Contact() {
                 <span className="text-[#0B0B0B]/35 group-hover:translate-x-1 transition-transform">→</span>
               </button>
 
-              <a href={`mailto:${contactEmail}`}
+              <a href={`mailto:${CONTACT_EMAIL}`}
                 className="w-full flex items-center justify-between gap-3 px-6 py-4 rounded-2xl border border-[#0B0B0B]/10 hover:border-[#0B0B0B]/25 hover:bg-[#0B0B0B]/[0.02] transition-all duration-300 group">
                 <span className="flex items-center gap-3">
                   <span className="w-10 h-10 rounded-2xl bg-[#0B0B0B]/[0.04] flex items-center justify-center group-hover:bg-[#0B0B0B]/[0.08] transition-colors"><Mail size={18} className="text-[#0B0B0B]/60" /></span>
                   <span className="text-left">
                     <span className="block text-[#0B0B0B]" style={{ fontWeight: 600 }}>Email directo</span>
-                    <span className="block text-[#0B0B0B]/35" style={{ fontSize: "0.85rem" }}>{contactEmail}</span>
+                    <span className="block text-[#0B0B0B]/35" style={{ fontSize: "0.85rem" }}>{CONTACT_EMAIL}</span>
                   </span>
                 </span>
                 <span className="text-[#0B0B0B]/35 group-hover:translate-x-1 transition-transform">→</span>
@@ -129,11 +124,14 @@ export function Contact() {
             <p className="text-[#0B0B0B] mb-1" style={{ fontWeight: 600 }}>Envíanos un mensaje</p>
             <p className="text-[#0B0B0B]/35 mb-6" style={{ fontSize: "0.9rem" }}>Respondemos en menos de 24h.</p>
             <div className="space-y-4">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre"
+              <label htmlFor="contact-name" className="sr-only">Nombre</label>
+              <input id="contact-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre"
                 className="w-full px-4 py-3 rounded-2xl border border-[#0B0B0B]/10 focus:outline-none focus:border-[#0B0B0B]/30 focus:ring-2 focus:ring-[#0B0B0B]/5 bg-white transition-all" style={{ fontSize: "0.95rem" }} />
-              <input value={email} onChange={(e) => { setEmail(e.target.value); setSendError(""); }} placeholder="tu@email.com" type="email"
+              <label htmlFor="contact-email" className="sr-only">Email</label>
+              <input id="contact-email" value={email} onChange={(e) => { setEmail(e.target.value); setSendError(""); }} placeholder="tu@email.com" type="email"
                 className="w-full px-4 py-3 rounded-2xl border border-[#0B0B0B]/10 focus:outline-none focus:border-[#0B0B0B]/30 focus:ring-2 focus:ring-[#0B0B0B]/5 bg-white transition-all" style={{ fontSize: "0.95rem" }} />
-              <textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Cuéntanos brevemente tu situación…" rows={4}
+              <label htmlFor="contact-msg" className="sr-only">Mensaje</label>
+              <textarea id="contact-msg" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Cuéntanos brevemente tu situación…" rows={4}
                 className="w-full px-4 py-3 rounded-2xl border border-[#0B0B0B]/10 focus:outline-none focus:border-[#0B0B0B]/30 focus:ring-2 focus:ring-[#0B0B0B]/5 bg-white resize-none transition-all" style={{ fontSize: "0.95rem", lineHeight: 1.6 }} />
               <motion.button onClick={submit} disabled={sending}
                 whileHover={!sending ? { scale: 1.01, boxShadow: "0 8px 30px rgba(11,11,11,0.12)" } : {}}

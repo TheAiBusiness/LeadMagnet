@@ -1,27 +1,20 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { WHATSAPP_NUMBER } from "../lib/constants";
 
 export function WhatsAppButton() {
   const [show, setShow] = useState(false);
   const [tooltip, setTooltip] = useState(true);
 
-  const whatsappNum = useMemo(
-    () => import.meta.env.VITE_WHATSAPP_NUMBER || "",
-    []
-  );
-
   useEffect(() => {
-    // Show after 2s
     const t1 = setTimeout(() => setShow(true), 2000);
-    // Hide tooltip after 8s
     const t2 = setTimeout(() => setTooltip(false), 8000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const openWhatsApp = () => {
     const text = encodeURIComponent("Hola, me gustaría saber más sobre vuestros servicios de IA.");
-    const num = whatsappNum || "376377048";
-    window.open(`https://wa.me/${num}?text=${text}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   if (!show) return null;

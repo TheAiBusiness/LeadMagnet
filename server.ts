@@ -1,6 +1,8 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import helmet from "helmet";
+import compression from "compression";
 import sgMail from "@sendgrid/mail";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
@@ -8,7 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(compression());
+app.use(express.json({ limit: "100kb" }));
 
 // CORS
 app.use("/api", (req, res, next) => {
@@ -59,6 +63,7 @@ const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "info@theaibusin
 const notify = () => process.env.NOTIFY_EMAIL || from().email;
 const calendlyUrl = () => process.env.CALENDLY_URL || "https://theaibusiness.com/#contacto";
 const fmt = (n: number) => n.toLocaleString("es-ES");
+const esc = (v: unknown): string => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // ═══════════════════════════════════
 // POST /api/send-report
@@ -72,10 +77,19 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     if (!calc || typeof calc.total !== "number") return res.status(400).json({ error: "Datos del informe inválidos" });
     const emailTo = emailStr;
 
+    const sName = esc(name);
+    const sSector = esc(sector);
+    const sTeam = esc(teamSize);
+    const sRevenue = esc(revenue);
+    const sTasks = Array.isArray(tasks) ? tasks.map(esc).join(", ") : esc(tasks);
+    const sPriority = esc(priority);
+    const sResp = esc(respTime);
+    const sNewResp = esc(calc.newResp);
+
     // Email al lead
     await sgMail.send({
       to: emailTo, from: from(),
-      subject: `${name ? name + ", tu" : "Tu"} informe AI — € ${fmt(calc.total)}/mes`,
+      subject: `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(calc.total)}/mes`,
       html: `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
@@ -84,14 +98,14 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     <p style="font-size:14px;color:#0B0B0B99;margin:0;">The AI Business</p>
   </div>
   <div style="background:#fff;border-radius:16px;padding:32px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-    <p style="font-size:16px;color:#0B0B0B;margin:0 0 24px;">Hola${name ? ` ${name}` : ""},</p>
+    <p style="font-size:16px;color:#0B0B0B;margin:0 0 24px;">Hola${sName ? ` ${sName}` : ""},</p>
     <p style="font-size:14px;color:#0B0B0B99;line-height:1.7;margin:0 0 28px;">Aquí tienes una estimación del impacto que la IA podría tener en tu negocio.</p>
     <div style="background:#FAFAFA;border-radius:12px;padding:24px;margin-bottom:24px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Ahorro mensual</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</span></td></tr>
         <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Ingreso adicional</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">€ ${fmt(calc.addRev)}</span></td></tr>
-        <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Mejora respuesta</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${respTime} → ${calc.newResp} min</span></td></tr>
-        <tr><td style="padding:12px 0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">AI Score</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${calc.score}/100</span></td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Mejora respuesta</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${sResp} → ${sNewResp} min</span></td></tr>
+        <tr><td style="padding:12px 0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">AI Score</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${esc(calc.score)}/100</span></td></tr>
       </table>
     </div>
     <div style="background:#0B0B0B;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
@@ -102,11 +116,11 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     <div style="background:#FAFAFA;border-radius:12px;padding:20px;margin-bottom:28px;">
       <p style="font-size:11px;color:#0B0B0B44;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Tu perfil</p>
       <table style="font-size:13px;color:#0B0B0B99;line-height:1.8;">
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Sector</td><td>${sector}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Equipo</td><td>${teamSize}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Facturación</td><td>${revenue}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Tareas</td><td>${(tasks as string[]).join(", ")}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Prioridad</td><td>${priority}</td></tr>
+        <tr><td style="padding-right:16px;color:#0B0B0B44;">Sector</td><td>${sSector}</td></tr>
+        <tr><td style="padding-right:16px;color:#0B0B0B44;">Equipo</td><td>${sTeam}</td></tr>
+        <tr><td style="padding-right:16px;color:#0B0B0B44;">Facturación</td><td>${sRevenue}</td></tr>
+        <tr><td style="padding-right:16px;color:#0B0B0B44;">Tareas</td><td>${sTasks}</td></tr>
+        <tr><td style="padding-right:16px;color:#0B0B0B44;">Prioridad</td><td>${sPriority}</td></tr>
       </table>
     </div>
     <div style="text-align:center;">
@@ -120,41 +134,45 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     // Notificación interna
     await sgMail.send({
       to: notify(), from: from(),
-      subject: `🔔 Lead: ${name || "Anónimo"} — ${sector} — € ${fmt(calc.total)}/mes`,
-      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${name || "-"}\nEmail: ${email}\nSector: ${sector}\nEquipo: ${teamSize}\nFacturación: ${revenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${(tasks as string[]).join(", ")}\nHoras/sem: ${hours} | Coste/h: ${costH}€\nLeads/mes: ${leads} | Ticket medio: ${avgTicket}€\nResp: ${respTime}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${priority}\n\nAhorro/mes: € ${fmt(calc.monthlySav)}\nIngreso: € ${fmt(calc.addRev)}\nTotal/mes: € ${fmt(calc.total)}\nAnual: € ${fmt(calc.annual)}\nScore: ${calc.score}/100</pre>`,
+      subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(calc.total)}/mes`,
+      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${sTeam}\nFacturación: ${sRevenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${sResp}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${sPriority}\n\nAhorro/mes: € ${fmt(calc.monthlySav)}\nIngreso: € ${fmt(calc.addRev)}\nTotal/mes: € ${fmt(calc.total)}\nAnual: € ${fmt(calc.annual)}\nScore: ${esc(calc.score)}/100</pre>`,
     });
 
-    // Guardar lead en Supabase (no bloquea la respuesta)
+    // Guardar lead en Supabase
     const sb = setupSupabase();
     if (sb) {
-      sb.from("leads").insert({
-        name: name || null,
-        email: emailTo,
-        sector,
-        team_size: teamSize,
-        revenue,
-        uses_ai: usesAI ?? null,
-        tasks: tasks || [],
-        hours_week: hours,
-        cost_per_hour: costH,
-        leads_month: leads,
-        response_time: respTime,
-        avg_ticket: avgTicket,
-        h24: h24 ?? null,
-        priority,
-        monthly_savings: calc.monthlySav,
-        additional_revenue: calc.addRev,
-        total_impact: calc.total,
-        annual_impact: calc.annual,
-        ai_score: calc.score,
-      }).then(({ error: dbErr }) => {
+      try {
+        const { error: dbErr } = await sb.from("leads").insert({
+          name: name || null,
+          email: emailTo,
+          sector,
+          team_size: teamSize,
+          revenue,
+          uses_ai: usesAI ?? null,
+          tasks: tasks || [],
+          hours_week: hours,
+          cost_per_hour: costH,
+          leads_month: leads,
+          response_time: respTime,
+          avg_ticket: avgTicket,
+          h24: h24 ?? null,
+          priority,
+          monthly_savings: calc.monthlySav,
+          additional_revenue: calc.addRev,
+          total_impact: calc.total,
+          annual_impact: calc.annual,
+          ai_score: calc.score,
+        });
         if (dbErr) console.error("Supabase leads insert error:", dbErr.message);
-      });
+      } catch (dbEx) {
+        console.error("Supabase leads exception:", dbEx);
+      }
     }
 
     res.json({ ok: true });
-  } catch (err: any) {
-    console.error("SendGrid error:", err?.response?.body || err);
+  } catch (err: unknown) {
+    const sgErr = err as { response?: { body?: unknown } };
+    console.error("SendGrid error:", sgErr?.response?.body || err);
     res.status(500).json({ error: "Failed to send" });
   }
 });
@@ -188,18 +206,22 @@ app.post("/api/send-contact", rateLimit, async (req, res) => {
     // Guardar contacto en Supabase
     const sb = setupSupabase();
     if (sb) {
-      sb.from("contacts").insert({
-        name: nameSafe || null,
-        email: emailStr,
-        message: messageStr,
-      }).then(({ error: dbErr }) => {
+      try {
+        const { error: dbErr } = await sb.from("contacts").insert({
+          name: nameSafe || null,
+          email: emailStr,
+          message: messageStr,
+        });
         if (dbErr) console.error("Supabase contacts insert error:", dbErr.message);
-      });
+      } catch (dbEx) {
+        console.error("Supabase contacts exception:", dbEx);
+      }
     }
 
     res.json({ ok: true });
-  } catch (err: any) {
-    console.error("SendGrid error:", err?.response?.body || err);
+  } catch (err: unknown) {
+    const sgErr = err as { response?: { body?: unknown } };
+    console.error("SendGrid error:", sgErr?.response?.body || err);
     res.status(500).json({ error: "Failed to send" });
   }
 });
