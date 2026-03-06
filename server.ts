@@ -49,12 +49,17 @@ function rateLimit(req: express.Request, res: express.Response, next: () => void
 
 // ─── Supabase ───
 let supabase: SupabaseClient | null = null;
-function setupSupabase() {
+function setupSupabase(): SupabaseClient | null {
   if (supabase) return supabase;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_KEY;
-  if (url && key) {
-    supabase = createClient(url, key);
+  const url = (process.env.SUPABASE_URL || "").trim();
+  const key = (process.env.SUPABASE_SERVICE_KEY || "").trim();
+  const validUrl = url.startsWith("https://") && url.length > 20;
+  if (validUrl && key) {
+    try {
+      supabase = createClient(url, key);
+    } catch (err) {
+      console.error("Supabase createClient error:", err);
+    }
   }
   return supabase;
 }
