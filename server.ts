@@ -6,6 +6,7 @@ import helmet from "helmet";
 import compression from "compression";
 import sgMail from "@sendgrid/mail";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { buildReportEmailHtml } from "./report-email";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -80,56 +81,19 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 
     const sName = esc(name);
     const sSector = esc(sector);
-    const sTeam = esc(teamSize);
-    const sRevenue = esc(revenue);
     const sTasks = Array.isArray(tasks) ? tasks.map(esc).join(", ") : esc(tasks);
-    const sPriority = esc(priority);
-    const sResp = esc(respTime);
-    const sNewResp = esc(calc.newResp);
+
+    // Informe completo (mismo contenido que la web)
+    const reportHtml = buildReportEmailHtml(
+      { name, email: emailTo, sector, teamSize, revenue, usesAI, tasks: Array.isArray(tasks) ? tasks : [], hours: Number(hours) || 0, costH: Number(costH) || 0, leads: Number(leads) || 0, respTime: Number(respTime) || 0, avgTicket: Number(avgTicket) || 0, h24: h24 ?? null, priority: priority || "", calc },
+      { fmt, esc, calendlyUrl }
+    );
 
     // Email al lead
     await sgMail.send({
       to: emailTo, from: from(),
       subject: `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(calc.total)}/mes`,
-      html: `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif;">
-<div style="max-width:600px;margin:0 auto;padding:40px 20px;">
-  <div style="text-align:center;margin-bottom:32px;">
-    <h1 style="font-size:24px;color:#0B0B0B;margin:0 0 8px;">Tu informe personalizado</h1>
-    <p style="font-size:14px;color:#0B0B0B99;margin:0;">The AI Business</p>
-  </div>
-  <div style="background:#fff;border-radius:16px;padding:32px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-    <p style="font-size:16px;color:#0B0B0B;margin:0 0 24px;">Hola${sName ? ` ${sName}` : ""},</p>
-    <p style="font-size:14px;color:#0B0B0B99;line-height:1.7;margin:0 0 28px;">Aquí tienes una estimación del impacto que la IA podría tener en tu negocio.</p>
-    <div style="background:#FAFAFA;border-radius:12px;padding:24px;margin-bottom:24px;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-        <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Ahorro mensual</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</span></td></tr>
-        <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Ingreso adicional</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">€ ${fmt(calc.addRev)}</span></td></tr>
-        <tr><td style="padding:12px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">Mejora respuesta</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${sResp} → ${sNewResp} min</span></td></tr>
-        <tr><td style="padding:12px 0;"><span style="font-size:12px;color:#0B0B0B66;text-transform:uppercase;letter-spacing:0.05em;">AI Score</span><br><span style="font-size:28px;font-weight:700;color:#0B0B0B;">${esc(calc.score)}/100</span></td></tr>
-      </table>
-    </div>
-    <div style="background:#0B0B0B;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
-      <p style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px;">Impacto total / mes</p>
-      <p style="font-size:36px;font-weight:700;color:#fff;margin:0;">€ ${fmt(calc.total)}</p>
-      <p style="font-size:12px;color:rgba(255,255,255,0.3);margin:4px 0 0;">≈ € ${fmt(calc.annual)}/año</p>
-    </div>
-    <div style="background:#FAFAFA;border-radius:12px;padding:20px;margin-bottom:28px;">
-      <p style="font-size:11px;color:#0B0B0B44;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Tu perfil</p>
-      <table style="font-size:13px;color:#0B0B0B99;line-height:1.8;">
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Sector</td><td>${sSector}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Equipo</td><td>${sTeam}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Facturación</td><td>${sRevenue}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Tareas</td><td>${sTasks}</td></tr>
-        <tr><td style="padding-right:16px;color:#0B0B0B44;">Prioridad</td><td>${sPriority}</td></tr>
-      </table>
-    </div>
-    <div style="text-align:center;">
-      <a href="${calendlyUrl()}" style="display:inline-block;padding:14px 32px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:500;">Reservar llamada gratuita →</a>
-    </div>
-  </div>
-  <p style="text-align:center;font-size:11px;color:#0B0B0B33;">© ${new Date().getFullYear()} The AI Business</p>
-</div></body></html>`,
+      html: reportHtml,
     });
 
     // Notificación interna
