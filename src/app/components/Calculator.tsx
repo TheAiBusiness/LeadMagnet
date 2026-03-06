@@ -391,11 +391,10 @@ export function Calculator({ id }: CalculatorProps) {
     setPdfError("");
     try {
       const el = reportRef.current;
-      /* Asegurar que el informe está en vista para html2canvas */
       el.scrollIntoView({ behavior: "instant", block: "start" });
-      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 100)));
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 200)));
 
-      /* ── Helper: resolve any oklch() → rgb() via browser engine ── */
+      /* ── Helper: resolve oklch() → rgb() using the browser engine ── */
       const resolveOklch = (raw: string): string => {
         if (!raw || !raw.includes("oklch")) return raw;
         return raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (match) => {
@@ -408,98 +407,48 @@ export function Calculator({ id }: CalculatorProps) {
         });
       };
 
-      /* ── 1. Patch <style> tag textContent — html2canvas reads raw CSS ── */
-      const savedStyleTexts: { styleEl: HTMLStyleElement; original: string }[] = [];
-      try {
-        document.querySelectorAll("style").forEach((styleEl) => {
-          const txt = styleEl.textContent || "";
-          if (txt.includes("oklch")) {
-            savedStyleTexts.push({ styleEl, original: txt });
-            styleEl.textContent = txt.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m));
-          }
-        });
-      } catch { /* ignore */ }
-
-      /* ── 2. Patch LIVE CSSOM rules — replace oklch in-place ── */
-      const savedRules: { rule: CSSStyleRule; prop: string; original: string; priority: string }[] = [];
-      try {
-        const processRules = (ruleList: CSSRuleList) => {
-          for (let j = 0; j < ruleList.length; j++) {
-            const rule = ruleList[j];
-            if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
-              processRules((rule as CSSGroupingRule).cssRules);
-              continue;
-            }
-            if (!(rule instanceof CSSStyleRule)) continue;
-            for (let k = 0; k < rule.style.length; k++) {
-              const prop = rule.style[k];
-              const val = rule.style.getPropertyValue(prop);
-              if (val && val.includes("oklch")) {
-                const priority = rule.style.getPropertyPriority(prop);
-                savedRules.push({ rule, prop, original: val, priority });
-                rule.style.setProperty(prop, resolveOklch(val), priority);
-              }
-            }
-          }
-        };
-        for (let i = 0; i < document.styleSheets.length; i++) {
-          try { processRules(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
-        }
-      } catch { /* ignore */ }
-
-      /* ── 3. Forzar colores del informe a inline (valores ya resueltos a RGB por el navegador); html2canvas no soporta oklch ── */
-      const savedInline: { el: HTMLElement; prop: string; original: string }[] = [];
-      const allEls = [el, ...Array.from(el.querySelectorAll("*"))];
       const COLOR_PROPS = [
-        "color", "backgroundColor", "borderColor",
-        "borderTopColor", "borderRightColor",
-        "borderBottomColor", "borderLeftColor",
-        "outlineColor", "textDecorationColor",
-        "boxShadow", "background",
+        "color", "background-color", "border-color",
+        "border-top-color", "border-right-color",
+        "border-bottom-color", "border-left-color",
+        "outline-color", "text-decoration-color",
+        "box-shadow", "background",
       ];
-      allEls.forEach((node) => {
-        if (!(node instanceof HTMLElement)) return;
-        const comp = getComputedStyle(node);
-        COLOR_PROPS.forEach((camel) => {
-          const kebab = camel.replace(/[A-Z]/g, (ch) => "-" + ch.toLowerCase());
-          let v = comp.getPropertyValue(kebab);
-          if (!v) return;
-          if (v.includes("oklch")) v = resolveOklch(v);
-          const prev = (node.style as any)[camel] ?? node.style.getPropertyValue(kebab) ?? "";
-          savedInline.push({ el: node, prop: camel, original: prev });
-          (node.style as any)[camel] = v;
-        });
-      });
 
-      /* ── 4. Capture — eliminar TODAS las hojas de estilo del clon.
-            Los colores ya están inline (paso 3), así html2canvas no parsea oklch. ── */
+      /* ── Capture: todo el parcheado se hace en onclone sobre el CLON ── */
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
-        onclone: (clonedDoc) => {
+        onclone: (clonedDoc: Document) => {
+          /* 1. Forzar colores inline (RGB) en TODOS los elementos del clon
+                usando getComputedStyle del clon (aún tiene stylesheets → valores correctos) */
+          const allNodes = clonedDoc.querySelectorAll("*");
+          allNodes.forEach((node) => {
+            if (!(node instanceof HTMLElement)) return;
+            const comp = clonedDoc.defaultView!.getComputedStyle(node);
+            COLOR_PROPS.forEach((prop) => {
+              let v = "";
+              try { v = comp.getPropertyValue(prop); } catch { return; }
+              if (!v) return;
+              if (v.includes("oklch")) v = resolveOklch(v);
+              node.style.setProperty(prop, v);
+            });
+          });
+
+          /* 2. Eliminar TODAS las hojas de estilo del clon:
+                html2canvas ya no parseará ningún CSS con oklch */
           clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((s) => s.remove());
+
+          /* 3. Limpiar cualquier oklch restante en atributos style de los nodos */
+          clonedDoc.querySelectorAll("[style]").forEach((node) => {
+            const raw = node.getAttribute("style") || "";
+            if (raw.includes("oklch")) {
+              node.setAttribute("style", raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m)));
+            }
+          });
         },
-      });
-
-      /* ── 5. Restore <style> tag text ── */
-      savedStyleTexts.forEach(({ styleEl, original }) => {
-        styleEl.textContent = original;
-      });
-
-      /* ── 6. Restore CSSOM rules ── */
-      savedRules.forEach(({ rule, prop, original, priority }) => {
-        rule.style.setProperty(prop, original, priority);
-      });
-
-      /* ── 7. Restore inline styles ── */
-      savedInline.forEach(({ el: node, prop, original }) => {
-        if (prop.startsWith("--")) {
-          node.style.setProperty(prop, original);
-        } else {
-          (node.style as any)[prop] = original;
-        }
       });
 
       /* ── Generate PDF ── */
