@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'html2canvas': path.resolve(__dirname, 'src/stubs/html2canvas.ts'),
     },
   },
   server: {

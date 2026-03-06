@@ -4,4 +4,6 @@ builder = "nixpacks"
 [build.nixpacks]
 install_cmd = "npm install"
 build_cmd = "npm run build"
-start_cmd = "npm start"
+
+[deploy]
+startCommand = "npm start"

@@ -13,7 +13,7 @@ import {
   Download,
 } from "lucide-react";
 import { EmailReport } from "./EmailReport";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 
 /* ─── Data ─── */
@@ -392,70 +392,26 @@ export function Calculator({ id }: CalculatorProps) {
     try {
       const el = reportRef.current;
       el.scrollIntoView({ behavior: "instant", block: "start" });
-      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 200)));
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 300)));
 
-      /* ── Helper: resolve oklch() → rgb() using the browser engine ── */
-      const resolveOklch = (raw: string): string => {
-        if (!raw || !raw.includes("oklch")) return raw;
-        return raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (match) => {
-          const d = document.createElement("div");
-          d.style.color = match;
-          document.body.appendChild(d);
-          const rgb = getComputedStyle(d).color;
-          document.body.removeChild(d);
-          return rgb || "transparent";
-        });
-      };
-
-      const COLOR_PROPS = [
-        "color", "background-color", "border-color",
-        "border-top-color", "border-right-color",
-        "border-bottom-color", "border-left-color",
-        "outline-color", "text-decoration-color",
-        "box-shadow", "background",
-      ];
-
-      /* ── Capture: todo el parcheado se hace en onclone sobre el CLON ── */
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
+      /* html-to-image usa el motor del navegador (SVG foreignObject):
+         soporta oklch, variables CSS, y todo CSS moderno de forma nativa */
+      const dataUrl = await toPng(el, {
         backgroundColor: "#ffffff",
-        logging: false,
-        onclone: (clonedDoc: Document) => {
-          /* 1. Forzar colores inline (RGB) en TODOS los elementos del clon
-                usando getComputedStyle del clon (aún tiene stylesheets → valores correctos) */
-          const allNodes = clonedDoc.querySelectorAll("*");
-          allNodes.forEach((node) => {
-            if (!(node instanceof HTMLElement)) return;
-            const comp = clonedDoc.defaultView!.getComputedStyle(node);
-            COLOR_PROPS.forEach((prop) => {
-              let v = "";
-              try { v = comp.getPropertyValue(prop); } catch { return; }
-              if (!v) return;
-              if (v.includes("oklch")) v = resolveOklch(v);
-              node.style.setProperty(prop, v);
-            });
-          });
-
-          /* 2. Eliminar TODAS las hojas de estilo del clon:
-                html2canvas ya no parseará ningún CSS con oklch */
-          clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((s) => s.remove());
-
-          /* 3. Limpiar cualquier oklch restante en atributos style de los nodos */
-          clonedDoc.querySelectorAll("[style]").forEach((node) => {
-            const raw = node.getAttribute("style") || "";
-            if (raw.includes("oklch")) {
-              node.setAttribute("style", raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m)));
-            }
-          });
-        },
+        pixelRatio: 2,
+        cacheBust: true,
       });
 
-      /* ── Generate PDF ── */
-      const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
+      /* Cargar imagen para obtener dimensiones */
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Error al cargar imagen"));
+        img.src = dataUrl;
+      });
 
+      const imgW = img.width;
+      const imgH = img.height;
       const pdfW = 210;
       const margin = 10;
       const contentW = pdfW - margin * 2;
@@ -465,8 +421,15 @@ export function Calculator({ id }: CalculatorProps) {
       const pdf = new jsPDF("p", "mm", "a4");
 
       if (contentH <= pageH) {
-        pdf.addImage(imgData, "PNG", margin, margin, contentW, contentH);
+        pdf.addImage(dataUrl, "PNG", margin, margin, contentW, contentH);
       } else {
+        /* Paginar: cortar la imagen en trozos de una página */
+        const srcCanvas = document.createElement("canvas");
+        srcCanvas.width = imgW;
+        srcCanvas.height = imgH;
+        const srcCtx = srcCanvas.getContext("2d")!;
+        srcCtx.drawImage(img, 0, 0);
+
         const pageCanvasHeight = (pageH / contentH) * imgH;
         let yOffset = 0;
         let page = 0;
@@ -477,12 +440,10 @@ export function Calculator({ id }: CalculatorProps) {
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = imgW;
           sliceCanvas.height = sliceH;
-          const ctx = sliceCanvas.getContext("2d");
-          if (ctx) {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, imgW, sliceH);
-            ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
-          }
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, imgW, sliceH);
+          ctx.drawImage(srcCanvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
           const sliceData = sliceCanvas.toDataURL("image/png");
           const sliceMMH = (sliceH * contentW) / imgW;
           pdf.addImage(sliceData, "PNG", margin, margin, contentW, sliceMMH);
@@ -493,7 +454,6 @@ export function Calculator({ id }: CalculatorProps) {
 
       const safeName = (name || "empresa").toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const fileName = `informe-ai-${safeName}.pdf`;
-      /* Descarga por blob + link: más fiable que pdf.save() tras async en algunos navegadores */
       try {
         const blob = pdf.output("blob");
         const url = URL.createObjectURL(blob);
