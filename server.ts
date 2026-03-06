@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import sgMail from "@sendgrid/mail";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -40,6 +41,19 @@ function rateLimit(req: express.Request, res: express.Response, next: () => void
   next();
 }
 
+// ─── Supabase ───
+let supabase: SupabaseClient | null = null;
+function setupSupabase() {
+  if (supabase) return supabase;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  if (url && key) {
+    supabase = createClient(url, key);
+  }
+  return supabase;
+}
+
+// ─── SendGrid ───
 const setupSG = () => { const k = process.env.SENDGRID_API_KEY; if (k) sgMail.setApiKey(k); return !!k; };
 const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "info@theaibusiness.com", name: process.env.SENDGRID_FROM_NAME || "The AI Business" });
 const notify = () => process.env.NOTIFY_EMAIL || from().email;
@@ -110,6 +124,34 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
       html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${name || "-"}\nEmail: ${email}\nSector: ${sector}\nEquipo: ${teamSize}\nFacturación: ${revenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${(tasks as string[]).join(", ")}\nHoras/sem: ${hours} | Coste/h: ${costH}€\nLeads/mes: ${leads} | Ticket medio: ${avgTicket}€\nResp: ${respTime}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${priority}\n\nAhorro/mes: € ${fmt(calc.monthlySav)}\nIngreso: € ${fmt(calc.addRev)}\nTotal/mes: € ${fmt(calc.total)}\nAnual: € ${fmt(calc.annual)}\nScore: ${calc.score}/100</pre>`,
     });
 
+    // Guardar lead en Supabase (no bloquea la respuesta)
+    const sb = setupSupabase();
+    if (sb) {
+      sb.from("leads").insert({
+        name: name || null,
+        email: emailTo,
+        sector,
+        team_size: teamSize,
+        revenue,
+        uses_ai: usesAI ?? null,
+        tasks: tasks || [],
+        hours_week: hours,
+        cost_per_hour: costH,
+        leads_month: leads,
+        response_time: respTime,
+        avg_ticket: avgTicket,
+        h24: h24 ?? null,
+        priority,
+        monthly_savings: calc.monthlySav,
+        additional_revenue: calc.addRev,
+        total_impact: calc.total,
+        annual_impact: calc.annual,
+        ai_score: calc.score,
+      }).then(({ error: dbErr }) => {
+        if (dbErr) console.error("Supabase leads insert error:", dbErr.message);
+      });
+    }
+
     // Webhook opcional
     const webhookUrl = process.env.LEAD_WEBHOOK_URL || "";
     if (webhookUrl) {
@@ -149,6 +191,18 @@ app.post("/api/send-contact", rateLimit, async (req, res) => {
       html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.04);"><h1 style="font-size:20px;color:#0B0B0B;margin:0 0 16px;">Gracias${nameSafe ? `, ${nameSafe}` : ""} 👋</h1><p style="color:#666;line-height:1.7;margin:0 0 24px;">Te responderemos en menos de 24 horas.</p><div style="text-align:center;"><a href="${calendlyUrl()}" style="display:inline-block;padding:12px 28px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;">Reservar llamada</a></div></div></div>`,
     });
 
+    // Guardar contacto en Supabase
+    const sb = setupSupabase();
+    if (sb) {
+      sb.from("contacts").insert({
+        name: nameSafe || null,
+        email: emailStr,
+        message: messageStr,
+      }).then(({ error: dbErr }) => {
+        if (dbErr) console.error("Supabase contacts insert error:", dbErr.message);
+      });
+    }
+
     res.json({ ok: true });
   } catch (err: any) {
     console.error("SendGrid error:", err?.response?.body || err);
@@ -158,7 +212,11 @@ app.post("/api/send-contact", rateLimit, async (req, res) => {
 
 // Health
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", sendgrid: !!process.env.SENDGRID_API_KEY });
+  res.json({
+    status: "ok",
+    sendgrid: !!process.env.SENDGRID_API_KEY,
+    supabase: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_KEY,
+  });
 });
 
 // Serve Vite build + SPA fallback
@@ -168,4 +226,5 @@ app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "dist", "index.htm
 app.listen(PORT, () => {
   console.log(`✓ Server on port ${PORT}`);
   console.log(`✓ SendGrid: ${process.env.SENDGRID_API_KEY ? "OK" : "NOT configured"}`);
+  console.log(`✓ Supabase: ${process.env.SUPABASE_URL ? "OK" : "NOT configured"}`);
 });
