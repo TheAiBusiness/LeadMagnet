@@ -81,26 +81,50 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 
     const sName = esc(name);
     const sSector = esc(sector);
+    const sTeam = esc(teamSize);
+    const sRevenue = esc(revenue);
+    const sPriority = esc(priority);
+    const sResp = esc(respTime);
     const sTasks = Array.isArray(tasks) ? tasks.map(esc).join(", ") : esc(tasks);
 
+    // Asegurar que calc tiene todos los campos (evitar errores en Railway)
+    const safeCalc = {
+      hrsSaved: Number(calc.hrsSaved) || 0,
+      monthlySav: Number(calc.monthlySav) || 0,
+      addRev: Number(calc.addRev) || 0,
+      newResp: Number(calc.newResp) || 0,
+      respImprove: Number(calc.respImprove) || 0,
+      score: Number(calc.score) || 0,
+      total: Number(calc.total) || 0,
+      annual: Number(calc.annual) || 0,
+      avgTicket: Number(calc.avgTicket) || Number(avgTicket) || 0,
+    };
+
     // Informe completo (mismo contenido que la web)
-    const reportHtml = buildReportEmailHtml(
-      { name, email: emailTo, sector, teamSize, revenue, usesAI, tasks: Array.isArray(tasks) ? tasks : [], hours: Number(hours) || 0, costH: Number(costH) || 0, leads: Number(leads) || 0, respTime: Number(respTime) || 0, avgTicket: Number(avgTicket) || 0, h24: h24 ?? null, priority: priority || "", calc },
-      { fmt, esc, calendlyUrl }
-    );
+    let reportHtml: string;
+    try {
+      reportHtml = buildReportEmailHtml(
+        { name, email: emailTo, sector, teamSize, revenue, usesAI, tasks: Array.isArray(tasks) ? tasks : [], hours: Number(hours) || 0, costH: Number(costH) || 0, leads: Number(leads) || 0, respTime: Number(respTime) || 0, avgTicket: Number(avgTicket) || 0, h24: h24 ?? null, priority: priority || "", calc: safeCalc },
+        { fmt, esc, calendlyUrl }
+      );
+    } catch (templateErr: unknown) {
+      console.error("buildReportEmailHtml error:", templateErr);
+      if (templateErr instanceof Error) console.error("Stack:", templateErr.stack);
+      return res.status(500).json({ error: "Failed to build report" });
+    }
 
     // Email al lead
     await sgMail.send({
       to: emailTo, from: from(),
-      subject: `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(calc.total)}/mes`,
+      subject: `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(safeCalc.total)}/mes`,
       html: reportHtml,
     });
 
     // Notificación interna
     await sgMail.send({
       to: notify(), from: from(),
-      subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(calc.total)}/mes`,
-      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${sTeam}\nFacturación: ${sRevenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${sResp}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${sPriority}\n\nAhorro/mes: € ${fmt(calc.monthlySav)}\nIngreso: € ${fmt(calc.addRev)}\nTotal/mes: € ${fmt(calc.total)}\nAnual: € ${fmt(calc.annual)}\nScore: ${esc(calc.score)}/100</pre>`,
+      subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(safeCalc.total)}/mes`,
+      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${sTeam}\nFacturación: ${sRevenue}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${sResp}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${sPriority}\n\nAhorro/mes: € ${fmt(safeCalc.monthlySav)}\nIngreso: € ${fmt(safeCalc.addRev)}\nTotal/mes: € ${fmt(safeCalc.total)}\nAnual: € ${fmt(safeCalc.annual)}\nScore: ${esc(safeCalc.score)}/100</pre>`,
     });
 
     // Guardar lead en Supabase
@@ -122,11 +146,11 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
           avg_ticket: avgTicket,
           h24: h24 ?? null,
           priority,
-          monthly_savings: calc.monthlySav,
-          additional_revenue: calc.addRev,
-          total_impact: calc.total,
-          annual_impact: calc.annual,
-          ai_score: calc.score,
+          monthly_savings: safeCalc.monthlySav,
+          additional_revenue: safeCalc.addRev,
+          total_impact: safeCalc.total,
+          annual_impact: safeCalc.annual,
+          ai_score: safeCalc.score,
         });
         if (dbErr) console.error("Supabase leads insert error:", dbErr.message);
       } catch (dbEx) {
@@ -136,8 +160,10 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 
     res.json({ ok: true });
   } catch (err: unknown) {
-    const sgErr = err as { response?: { body?: unknown } };
-    console.error("SendGrid error:", sgErr?.response?.body || err);
+    const sgErr = err as { response?: { body?: unknown; statusCode?: number } };
+    const msg = sgErr?.response?.body || err;
+    console.error("SendGrid /api/send-report error:", msg);
+    if (err instanceof Error) console.error("Stack:", err.stack);
     res.status(500).json({ error: "Failed to send" });
   }
 });
