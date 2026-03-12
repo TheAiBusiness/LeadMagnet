@@ -1296,9 +1296,9 @@ export function Calculator({ id }: CalculatorProps) {
             <motion.div initial={{ opacity: 0, filter: "blur(14px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} transition={{ duration: 0.7 }}>
               <div className="space-y-4 mb-6">
                 {[
-                  { label: t("calc.opSavingsMonth"), val: `€ ${fmt(calc.monthlySav)}`, sub: `${calc.hrsSaved}h liberadas × ${costH}€/h × overhead equipo`, icon: Euro },
-                  { label: t("calc.addRevMonth"), val: `€ ${fmt(calc.addRev)}`, sub: `${fmt(leads)} leads × boost conv. × €${fmtTicket(avgTicket, locale)} ticket`, icon: TrendingUp },
-                  { label: t("calc.responseTime"), val: `${respTime} → ${calc.newResp} min`, sub: `–${calc.respImprove}% · media ${sector}: ${({ Ecommerce: 35, SaaS: 20, Agencia: 45, Servicios: 55, Salud: 30, Inmobiliaria: 75, Logística: 50, Otros: 40 } as Record<string,number>)[sector] || 40}min`, icon: Clock },
+                  { label: t("calc.opSavingsMonth"), val: `€ ${fmt(calc.monthlySav)}`, sub: t("calc.subSavings", { hours: calc.hrsSaved, cost: costH }), icon: Euro },
+                  { label: t("calc.addRevMonth"), val: `€ ${fmt(calc.addRev)}`, sub: t("calc.subRevenue", { leads: fmt(leads), ticket: fmtTicket(avgTicket, locale) }), icon: TrendingUp },
+                  { label: t("calc.responseTime"), val: `${respTime} → ${calc.newResp} min`, sub: t("calc.subResponse", { improve: calc.respImprove, avgLabel: t("calc.avgLabel"), sector: t(`sectors.${sector}`, sector), avg: ({ Ecommerce: 35, SaaS: 20, Agencia: 45, Servicios: 55, Salud: 30, Inmobiliaria: 75, Logística: 50, Otros: 40 } as Record<string,number>)[sector] || 40 }), icon: Clock },
                   { label: t("calc.aiScore"), val: `${calc.score}/100`, sub: calc.score >= 75 ? t("calc.veryHighPotential") : calc.score >= 55 ? t("calc.highPotential") : calc.score >= 35 ? t("calc.moderate") : t("calc.initial"), icon: BarChart3 },
                 ].map((m, i) => (
                   <motion.div key={m.label}
@@ -1323,8 +1323,8 @@ export function Calculator({ id }: CalculatorProps) {
               >
                 <p className="text-white/40 mb-1" style={{ fontSize: "0.6rem", letterSpacing: "0.12em" }}>{t("calc.totalImpactMonth")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 700 }}>€ {fmt(calc.total)}</p>
-                <p className="text-white/30 mt-1" style={{ fontSize: "0.65rem" }}>≈ € {fmt(calc.annual)}/año · {((calc.annual / (REVENUES.find((r) => r.label === revenue)?.value || 300000)) * 100).toFixed(1)}% de tu facturación</p>
-                <p className="text-white/20 mt-2" style={{ fontSize: "0.52rem", lineHeight: 1.5 }}>€{fmt(calc.monthlySav)} ahorro + €{fmt(calc.addRev)} ingresos adicionales</p>
+                <p className="text-white/30 mt-1" style={{ fontSize: "0.65rem" }}>≈ € {fmt(calc.annual)}{t("calc.yearSuffix")} · {((calc.annual / (REVENUES.find((r) => r.label === revenue)?.value || 300000)) * 100).toFixed(1)}% {t("calc.ofRevenue")}</p>
+                <p className="text-white/20 mt-2" style={{ fontSize: "0.52rem", lineHeight: 1.5 }}>€{fmt(calc.monthlySav)} {t("calc.savings")} + €{fmt(calc.addRev)} {t("calc.additionalRevenue")}</p>
               </motion.div>
 
               <motion.p
@@ -1333,7 +1333,7 @@ export function Calculator({ id }: CalculatorProps) {
                 transition={{ delay: 0.8 }}
                 className="text-[#0B0B0B]/15 text-center mt-5" style={{ fontSize: "0.6rem", lineHeight: 1.6 }}
               >
-                * Estimaciones basadas en benchmarks del sector {sector}, eficiencia AI ({Math.round(({ SaaS: 1.15, Ecommerce: 1.10, Logística: 1.08, Agencia: 1.05, Servicios: 1.00, Inmobiliaria: 0.95, Salud: 0.92, Otros: 1.00 } as Record<string,number>)[sector] * 100 || 100)}%){usesAI ? `, ${t("calc.discountExistingAI")}` : ""}.
+                {t("calc.estimationNote", { sector: t(`sectors.${sector}`, sector), efficiency: Math.round(({ SaaS: 1.15, Ecommerce: 1.10, Logística: 1.08, Agencia: 1.05, Servicios: 1.00, Inmobiliaria: 0.95, Salud: 0.92, Otros: 1.00 } as Record<string,number>)[sector] * 100 || 100), aiNote: usesAI ? t("calc.discountExisting") : "" })}
               </motion.p>
             </motion.div>
           )}

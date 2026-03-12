@@ -184,6 +184,10 @@
     "ofRevenue": "of your revenue",
     "savings": "savings",
     "additionalRevenue": "additional revenue",
+    "subSavings": "{{hours}}h freed × {{cost}}€/h × team overhead",
+    "subRevenue": "{{leads}} leads × conv. boost × €{{ticket}} ticket",
+    "subResponse": "–{{improve}}% · {{avgLabel}} {{sector}}: {{avg}}min",
+    "avgLabel": "avg.",
     "teamDesc": {
       "1 – 5": "a small team of 1–5",
       "6 – 20": "a team of 6–20",
@@ -426,43 +430,55 @@
       "Facturación": "Automatic processing",
       "Contenido": "AI-assisted generation"
     },
+    "impactHigh": "high",
+    "impactMedium": "medium",
+    "impactMediumHigh": "medium–high",
     "techIdeas": {
       "virtual-assistant": {
         "title": "Virtual assistant for clients",
-        "desc": "Automatic answers to your clients' most common questions, 24/7."
+        "desc": "Automatic answers to your clients' most common questions, 24/7.",
+        "setup": "1–2 weeks"
       },
       "auto-workflows": {
         "title": "Automate repetitive tasks",
         "desc": "Stop {{tasks}} manually — set it up once and it runs on its own.",
-        "descFallback": "Stop repeating tasks manually — set it up once and it runs on its own."
+        "descFallback": "Stop repeating tasks manually — set it up once and it runs on its own.",
+        "setup": "2–3 weeks"
       },
       "smart-crm": {
         "title": "Automatic sales follow-up",
-        "desc": "No interested client goes unanswered. Automatic follow-ups and reminders."
+        "desc": "No interested client goes unanswered. Automatic follow-ups and reminders.",
+        "setup": "2–4 weeks"
       },
       "auto-content": {
         "title": "Fast content creation",
-        "desc": "Website, email and social copy in minutes instead of hours, in your brand voice."
+        "desc": "Website, email and social copy in minutes instead of hours, in your brand voice.",
+        "setup": "1 week"
       },
       "live-dashboard": {
         "title": "Real-time dashboard",
-        "desc": "See how your business is doing at a glance, always updated, no manual reports."
+        "desc": "See how your business is doing at a glance, always updated, no manual reports.",
+        "setup": "1–2 weeks"
       },
       "smart-scheduling": {
         "title": "Automated booking & scheduling",
-        "desc": "Your clients book appointments themselves from the web. Automatic reminders included."
+        "desc": "Your clients book appointments themselves from the web. Automatic reminders included.",
+        "setup": "3–5 days"
       },
       "auto-billing": {
         "title": "Billing on autopilot",
-        "desc": "Invoices, payments and reminders generated and sent without manual intervention."
+        "desc": "Invoices, payments and reminders generated and sent without manual intervention.",
+        "setup": "2–3 weeks"
       },
       "smart-email": {
         "title": "Personalized communication at scale",
-        "desc": "The right message to each client at the right time, automatically."
+        "desc": "The right message to each client at the right time, automatically.",
+        "setup": "1–2 weeks"
       },
       "support-triage": {
         "title": "Smart inquiry classification",
-        "desc": "Each inquiry is classified and routed to the right person without manual intervention."
+        "desc": "Each inquiry is classified and routed to the right person without manual intervention.",
+        "setup": "1–2 weeks"
       }
     },
     "autoWorkflowsTaskMap": {

@@ -184,6 +184,10 @@
     "ofRevenue": "de tu facturación",
     "savings": "ahorro",
     "additionalRevenue": "ingresos adicionales",
+    "subSavings": "{{hours}}h liberadas × {{cost}}€/h × overhead equipo",
+    "subRevenue": "{{leads}} leads × boost conv. × €{{ticket}} ticket",
+    "subResponse": "–{{improve}}% · {{avgLabel}} {{sector}}: {{avg}}min",
+    "avgLabel": "media",
     "teamDesc": {
       "1 – 5": "un equipo pequeño de 1–5",
       "6 – 20": "un equipo de 6–20",
@@ -426,43 +430,55 @@
       "Facturación": "Procesamiento automático",
       "Contenido": "Generación asistida por AI"
     },
+    "impactHigh": "alto",
+    "impactMedium": "medio",
+    "impactMediumHigh": "medio–alto",
     "techIdeas": {
       "virtual-assistant": {
         "title": "Asistente virtual para clientes",
-        "desc": "Respuestas automáticas a las dudas más frecuentes de tus clientes, 24/7."
+        "desc": "Respuestas automáticas a las dudas más frecuentes de tus clientes, 24/7.",
+        "setup": "1–2 semanas"
       },
       "auto-workflows": {
         "title": "Automatizar tareas repetitivas",
         "desc": "Dejar de {{tasks}} a mano — se configura una vez y funciona solo.",
-        "descFallback": "Dejar de repetir tareas a mano — se configura una vez y funciona solo."
+        "descFallback": "Dejar de repetir tareas a mano — se configura una vez y funciona solo.",
+        "setup": "2–3 semanas"
       },
       "smart-crm": {
         "title": "Seguimiento comercial automático",
-        "desc": "Que ningún cliente interesado se quede sin respuesta. Seguimiento y recordatorios automáticos."
+        "desc": "Que ningún cliente interesado se quede sin respuesta. Seguimiento y recordatorios automáticos.",
+        "setup": "2–4 semanas"
       },
       "auto-content": {
         "title": "Creación rápida de contenidos",
-        "desc": "Textos para web, emails y redes en minutos en vez de horas, con tu tono de marca."
+        "desc": "Textos para web, emails y redes en minutos en vez de horas, con tu tono de marca.",
+        "setup": "1 semana"
       },
       "live-dashboard": {
         "title": "Panel de control en tiempo real",
-        "desc": "Ver cómo va tu negocio de un vistazo, siempre actualizado, sin preparar informes a mano."
+        "desc": "Ver cómo va tu negocio de un vistazo, siempre actualizado, sin preparar informes a mano.",
+        "setup": "1–2 semanas"
       },
       "smart-scheduling": {
         "title": "Reservas y agenda automática",
-        "desc": "Tus clientes reservan cita solos desde la web. Recordatorios automáticos incluidos."
+        "desc": "Tus clientes reservan cita solos desde la web. Recordatorios automáticos incluidos.",
+        "setup": "3–5 días"
       },
       "auto-billing": {
         "title": "Facturación en piloto automático",
-        "desc": "Facturas, cobros y recordatorios de pago generados y enviados sin intervención manual."
+        "desc": "Facturas, cobros y recordatorios de pago generados y enviados sin intervención manual.",
+        "setup": "2–3 semanas"
       },
       "smart-email": {
         "title": "Comunicación personalizada a escala",
-        "desc": "El mensaje justo a cada cliente en el momento adecuado, de forma automática."
+        "desc": "El mensaje justo a cada cliente en el momento adecuado, de forma automática.",
+        "setup": "1–2 semanas"
       },
       "support-triage": {
         "title": "Clasificación inteligente de consultas",
-        "desc": "Cada consulta se clasifica y dirige al responsable correcto sin intervención manual."
+        "desc": "Cada consulta se clasifica y dirige al responsable correcto sin intervención manual.",
+        "setup": "1–2 semanas"
       }
     },
     "autoWorkflowsTaskMap": {
