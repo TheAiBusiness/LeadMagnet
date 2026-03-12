@@ -34,7 +34,7 @@ export function Header() {
           {([
             { label: t("header.services"), href: "#servicios" },
             { label: t("header.cases"), href: "#casos" },
-            { label: t("header.contact"), href: "#contacto" },
+            { label: t("header.contact"), href: "mailto:info@theaibusiness.com" },
           ]).map((item, i) => (
             <motion.a
               key={item.href}
@@ -81,7 +81,7 @@ export function Header() {
           {([
             { label: t("header.services"), href: "#servicios" },
             { label: t("header.cases"), href: "#casos" },
-            { label: t("header.contact"), href: "#contacto" },
+            { label: t("header.contact"), href: "mailto:info@theaibusiness.com" },
           ]).map((item) => (
             <a
               key={item.href}
