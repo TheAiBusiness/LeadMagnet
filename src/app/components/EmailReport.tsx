@@ -445,8 +445,8 @@ export function EmailReport({ name, email, sector, teamSize, revenue, usesAI, ta
     : t(`report.techIdeas.${idea.id}.desc`)
 }</p>
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F5] text-[#0B0B0B]/35" style={{ fontSize: "0.5rem" }}><Timer size={8}/> {idea.setupTime}</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F5] text-[#0B0B0B]/35" style={{ fontSize: "0.5rem" }}><Zap size={8}/> {t("report.impact")} {idea.impact.toLowerCase()}</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F5] text-[#0B0B0B]/35" style={{ fontSize: "0.5rem" }}><Timer size={8}/> {t(`report.techIdeas.${idea.id}.setup`)}</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F5] text-[#0B0B0B]/35" style={{ fontSize: "0.5rem" }}><Zap size={8}/> {t("report.impact")} {idea.impact === "Alto" ? t("report.impactHigh") : idea.impact === "Medio–Alto" ? t("report.impactMediumHigh") : t("report.impactMedium")}</span>
                     </div>
                   </div>
                 </motion.div>
