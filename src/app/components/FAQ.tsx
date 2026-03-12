@@ -73,7 +73,7 @@ export function FAQ() {
                     className="w-full flex items-center justify-between p-6 md:p-7 cursor-pointer"
                   >
                     <span
-                      className="text-left text-[#0B0B0B]"
+                      className="text-left text-[#0B0B0B] break-words pr-2"
                       style={{ fontSize: "1rem", fontWeight: 500 }}
                     >
                       {faq.q}

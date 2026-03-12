@@ -102,7 +102,7 @@ export function Process({ id }: ProcessProps) {
                 {s.title}
               </h3>
               <p
-                className="text-[#0B0B0B]/40 max-w-[300px] mx-auto mb-3"
+                className="text-[#0B0B0B]/40 max-w-[320px] mx-auto mb-3"
                 style={{ fontSize: "0.85rem", fontWeight: 400, lineHeight: 1.7 }}
               >
                 {s.desc}

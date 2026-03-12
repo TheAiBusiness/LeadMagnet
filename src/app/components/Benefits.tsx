@@ -115,7 +115,7 @@ export function Benefits() {
                   {b.title}
                 </h3>
                 <p
-                  className="text-[#0B0B0B]/40"
+                  className="text-[#0B0B0B]/40 break-words"
                   style={{ fontSize: "0.85rem", fontWeight: 400, lineHeight: 1.65 }}
                 >
                   {b.desc}

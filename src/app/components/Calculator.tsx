@@ -837,7 +837,7 @@ export function Calculator({ id }: CalculatorProps) {
                   {t("calc.q2Line1")}<br />{t("calc.q2Line2")}
                 </motion.h2>
                 <div className="flex flex-wrap gap-2.5">
-                  {TEAMS.map((t, i) => <Pill key={t.label} active={teamSize === t.label} onClick={() => { setTeamSize(t.label); autoAdvance(); }} big delay={0.2 + i * 0.04} groupId="team">{t.label}</Pill>)}
+                  {TEAMS.map((team, i) => <Pill key={team.label} active={teamSize === team.label} onClick={() => { setTeamSize(team.label); autoAdvance(); }} big delay={0.2 + i * 0.04} groupId="team">{team.label}</Pill>)}
                 </div>
               </motion.div>
             )}

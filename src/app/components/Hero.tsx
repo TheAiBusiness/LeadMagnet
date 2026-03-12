@@ -206,12 +206,12 @@ export function Hero({ onProcessClick }: HeroProps) {
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 2.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-16 flex items-center justify-center gap-6"
+          className="mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
         >
           {[t("hero.stat1"), t("hero.stat2"), t("hero.stat3"), t("hero.stat4")].map(
             (stat, i) => (
               <motion.span
-                key={stat}
+                key={`${stat}-${i}`}
                 initial={{ opacity: 0, filter: "blur(8px)", scale: 1.2 }}
                 animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
                 transition={{

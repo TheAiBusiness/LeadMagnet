@@ -52,7 +52,7 @@ export function Footer() {
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
-        className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4"
+        className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6"
       >
         <span
           className="text-[#0B0B0B] tracking-tight"
@@ -61,7 +61,7 @@ export function Footer() {
           <img src={logoImg} alt={t("header.logoAlt")} className="h-10" />
         </span>
         <p
-          className="text-[#0B0B0B]/25"
+          className="text-[#0B0B0B]/25 text-center md:text-left"
           style={{ fontSize: "0.78rem", fontWeight: 400 }}
         >
           {t("footer.copyright")}
