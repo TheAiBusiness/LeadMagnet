@@ -75,11 +75,10 @@ export function Footer() {
               theaibusiness.com
             </a>
           </p>
-          <div className="flex gap-6">
+          <div className="flex items-center gap-6">
             {([
-              { label: t("footer.privacy"), href: "#privacidad" },
-              { label: t("footer.terms"), href: "#términos" },
-              { label: t("footer.contact"), href: "#contacto" },
+              { label: t("footer.privacy"), href: "#privacidad", external: false },
+              { label: t("footer.terms"), href: "#términos", external: false },
             ]).map((link) => (
               <a
                 key={link.href}
@@ -90,6 +89,15 @@ export function Footer() {
                 {link.label}
               </a>
             ))}
+            <a
+              href="https://cal.com/alejandro-rios-calera-qcnhfq/auditoria-theaibusiness"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-1.5 rounded-full bg-[#0B0B0B] text-white hover:bg-[#0B0B0B]/85 transition-colors duration-300 whitespace-nowrap"
+              style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.06em" }}
+            >
+              {t("footer.audit")}
+            </a>
           </div>
         </motion.div>
       </div>
