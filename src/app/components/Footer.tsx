@@ -65,7 +65,15 @@ export function Footer() {
             className="text-[#0B0B0B]/25 text-center md:text-left"
             style={{ fontSize: "0.78rem", fontWeight: 400 }}
           >
-            {t("footer.copyright")}
+            {t("footer.copyright")}{" "}
+            <a
+              href="https://theaibusiness.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0B0B0B]/40 hover:text-[#0B0B0B] transition-colors duration-300 underline underline-offset-2"
+            >
+              theaibusiness.com
+            </a>
           </p>
           <div className="flex gap-6">
             {([
