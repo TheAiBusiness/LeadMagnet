@@ -146,7 +146,7 @@ export function Hero({ onProcessClick }: HeroProps) {
           <BlurWords text={t("hero.headline2")} delay={0.5} />
           {" "}
           <motion.span
-            className="inline-block italic origin-center"
+            className="inline-block italic origin-center mr-3"
             style={{ textShadow: "0 4px 24px rgba(11,11,11,0.25)" }}
             initial={{
               opacity: 0,

@@ -73,16 +73,6 @@ export function Process({ id }: ProcessProps) {
               }}
               className="relative text-center px-8 py-10 md:py-0"
             >
-              {/* Connector line (desktop) */}
-              {i < 2 && (
-                <motion.div
-                  className="hidden md:block absolute top-[2.5rem] right-0 w-full h-[1px] bg-[#0B0B0B]/[0.06]"
-                  style={{ left: "50%" }}
-                  initial={{ scaleX: 0 }}
-                  animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
-                  transition={{ duration: 0.8, delay: 0.6 + i * 0.2 }}
-                />
-              )}
 
               {/* Number */}
               <motion.span
