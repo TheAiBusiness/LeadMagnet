@@ -76,6 +76,31 @@
     "contact": "Contact",
     "audit": "REQUEST STRATEGIC AUDIT"
   },
+  "contact": {
+    "tag": "CONTACT",
+    "title": "Let's talk about your case",
+    "channelsIntro": "Choose your preferred channel. If you already have the calculator report, bring it along and we'll review it together.",
+    "bookCall": "Book a call",
+    "bookCallSub": "20–30 min · no commitment",
+    "whatsappSub": "Quick reply · direct chat",
+    "directEmail": "Direct email",
+    "formTitle": "Send us a message",
+    "formSub": "We reply within 24h.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email",
+    "msgLabel": "Message",
+    "msgPlaceholder": "Briefly tell us about your situation…",
+    "sending": "Sending…",
+    "send": "Send message",
+    "sent": "✓ Message sent. We'll get back to you soon.",
+    "errorInvalidEmail": "Invalid email",
+    "errorEmptyMsg": "Write a message",
+    "errorMailtoFallback": "Your email client has been opened. Send it from there.",
+    "mailtoSubject": "Contact — The AI Business",
+    "mailtoNoName": "No name",
+    "whatsappText": "Hi, I'd like to know more about your AI services."
+  },
   "calculatorPage": {
     "back": "Back"
   },

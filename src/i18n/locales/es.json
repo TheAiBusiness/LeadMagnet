@@ -76,6 +76,31 @@
     "contact": "Contacto",
     "audit": "SOLICITAR AUDITORÍA ESTRATÉGICA"
   },
+  "contact": {
+    "tag": "CONTACTO",
+    "title": "¿Hablamos de tu caso?",
+    "channelsIntro": "Elige la vía que prefieras. Si ya tienes el informe de la calculadora, tráelo y lo revisamos juntos.",
+    "bookCall": "Reservar llamada",
+    "bookCallSub": "20–30 min · sin compromiso",
+    "whatsappSub": "Respuesta rápida · chat directo",
+    "directEmail": "Email directo",
+    "formTitle": "Envíanos un mensaje",
+    "formSub": "Respondemos en menos de 24h.",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Email",
+    "msgLabel": "Mensaje",
+    "msgPlaceholder": "Cuéntanos brevemente tu situación…",
+    "sending": "Enviando…",
+    "send": "Enviar mensaje",
+    "sent": "✓ Mensaje enviado. Te responderemos pronto.",
+    "errorInvalidEmail": "Email no válido",
+    "errorEmptyMsg": "Escribe un mensaje",
+    "errorMailtoFallback": "Se ha abierto tu cliente de correo. Envíalo desde ahí.",
+    "mailtoSubject": "Contacto — The AI Business",
+    "mailtoNoName": "Sin nombre",
+    "whatsappText": "Hola, me gustaría saber más sobre vuestros servicios de IA."
+  },
   "calculatorPage": {
     "back": "Volver"
   },
