@@ -12,14 +12,29 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+}));
 app.use(compression());
 app.use(express.json({ limit: "100kb" }));
 
-// CORS
+// CORS — whitelist de orígenes permitidos
+const ALLOWED_ORIGINS = new Set([
+  "https://theaibusiness.com",
+  "https://www.theaibusiness.com",
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map(s => s.trim()) : []),
+]);
+if (process.env.NODE_ENV !== "production") {
+  ALLOWED_ORIGINS.add("http://localhost:5173");
+  ALLOWED_ORIGINS.add("http://localhost:3000");
+}
 app.use("/api", (req, res, next) => {
-  const origin = req.headers.origin;
-  res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  const origin = req.headers.origin || "";
+  if (ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.sendStatus(204);
@@ -127,12 +142,16 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
       html: reportHtml,
     });
 
-    // Notificación interna (usamos esc() directo para no depender de variables intermedias)
-    await sgMail.send({
-      to: notify(), from: from(),
-      subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(safeCalc.total)}/mes`,
-      html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(email)}\nSector: ${sSector}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${esc(respTime)}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${esc(priority)}\n\nAhorro/mes: € ${fmt(safeCalc.monthlySav)}\nIngreso: € ${fmt(safeCalc.addRev)}\nTotal/mes: € ${fmt(safeCalc.total)}\nAnual: € ${fmt(safeCalc.annual)}\nScore: ${esc(safeCalc.score)}/100</pre>`,
-    });
+    // Notificación interna — no bloquea la respuesta al usuario
+    try {
+      await sgMail.send({
+        to: notify(), from: from(),
+        subject: `🔔 Lead: ${sName || "Anónimo"} — ${sSector} — € ${fmt(safeCalc.total)}/mes`,
+        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailTo)}\nSector: ${sSector}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}\nUsa IA: ${usesAI ? "Sí" : "No"}\nTareas: ${sTasks}\nHoras/sem: ${esc(hours)} | Coste/h: ${esc(costH)}€\nLeads/mes: ${esc(leads)} | Ticket medio: ${esc(avgTicket)}€\nResp: ${esc(respTime)}min | 24/7: ${h24 ? "Sí" : "No"}\nPrioridad: ${esc(priority)}\n\nAhorro/mes: € ${fmt(safeCalc.monthlySav)}\nIngreso: € ${fmt(safeCalc.addRev)}\nTotal/mes: € ${fmt(safeCalc.total)}\nAnual: € ${fmt(safeCalc.annual)}\nScore: ${esc(safeCalc.score)}/100</pre>`,
+      });
+    } catch (notifyErr) {
+      console.error("Notification email failed (non-blocking):", notifyErr);
+    }
 
     // Guardar informe en Supabase vía RPC
     const sb = setupSupabase();
@@ -178,14 +197,7 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     const msg = sgErr?.response?.body || err;
     console.error("SendGrid /api/send-report error:", msg);
     if (err instanceof Error) console.error("Stack:", err.stack);
-    // Mensaje seguro para ver en el navegador (pestaña Red) sin exponer datos sensibles
-    let hint = "Failed to send";
-    if (sgErr?.response?.body && typeof sgErr.response.body === "object") {
-      const body = sgErr.response.body as { errors?: Array<{ message?: string }> };
-      const first = body.errors?.[0]?.message;
-      if (typeof first === "string") hint = first;
-    } else if (err instanceof Error) hint = err.message.slice(0, 120);
-    res.status(500).json({ error: "Failed to send", hint });
+    res.status(500).json({ error: "Failed to send report. Please try again later." });
   }
 });
 

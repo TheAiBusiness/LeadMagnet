@@ -34,7 +34,7 @@ export function Header() {
           {([
             { label: t("header.services"), href: "#servicios" },
             { label: t("header.cases"), href: "#casos" },
-            { label: t("header.contact"), href: "mailto:info@theaibusiness.com" },
+            { label: t("header.contact"), href: "/#contacto" },
           ]).map((item, i) => (
             <motion.a
               key={item.href}
@@ -66,6 +66,8 @@ export function Header() {
         <button
           className="md:hidden p-2 cursor-pointer"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -73,7 +75,8 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <motion.div
+        <motion.nav
+          aria-label="Menú principal"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="md:hidden bg-white/95 backdrop-blur-2xl border-t border-[#EAEAEA]/40 px-6 py-5 flex flex-col gap-4"
@@ -81,7 +84,7 @@ export function Header() {
           {([
             { label: t("header.services"), href: "#servicios" },
             { label: t("header.cases"), href: "#casos" },
-            { label: t("header.contact"), href: "mailto:info@theaibusiness.com" },
+            { label: t("header.contact"), href: "/#contacto" },
           ]).map((item) => (
             <a
               key={item.href}
@@ -100,7 +103,7 @@ export function Header() {
           >
             {t("header.calculateArrow")}
           </button>
-        </motion.div>
+        </motion.nav>
       )}
     </motion.header>
   );

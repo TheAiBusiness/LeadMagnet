@@ -42,7 +42,7 @@ export function Contact() {
       const subject = encodeURIComponent("Contacto — The AI Business");
       const body = encodeURIComponent(`${m}\n\n—\n${n || "Sin nombre"}\n${e}`);
       window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-      setSent(true);
+      setSendError("Se ha abierto tu cliente de correo. Envíalo desde ahí.");
     } finally { setSending(false); }
   };
 
