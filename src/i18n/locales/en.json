@@ -76,6 +76,11 @@
     "contact": "Contact",
     "audit": "REQUEST STRATEGIC AUDIT"
   },
+  "whatsapp": {
+    "tooltip": "Let's talk? 👋",
+    "tooltipSub": "Reply in minutes",
+    "ariaLabel": "Contact via WhatsApp"
+  },
   "legal": {
     "privacyTitle": "Privacy",
     "privacyP1": "At The AI Business we process the data you provide (name, email, calculator responses and contact messages) to send you the personalized report, respond to your inquiry and, if you authorize it, maintain commercial communication.",

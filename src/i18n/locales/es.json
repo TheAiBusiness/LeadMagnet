@@ -76,6 +76,11 @@
     "contact": "Contacto",
     "audit": "SOLICITAR AUDITORÍA ESTRATÉGICA"
   },
+  "whatsapp": {
+    "tooltip": "¿Hablamos? 👋",
+    "tooltipSub": "Respuesta en minutos",
+    "ariaLabel": "Contactar por WhatsApp"
+  },
   "legal": {
     "privacyTitle": "Privacidad",
     "privacyP1": "En The AI Business tratamos los datos que nos facilitas (nombre, email, respuestas de la calculadora y mensajes de contacto) para enviarte el informe personalizado, responder a tu consulta y, si lo autorizas, mantener comunicación comercial.",
