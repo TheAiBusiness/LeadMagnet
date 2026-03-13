@@ -76,6 +76,17 @@
     "contact": "Contact",
     "audit": "REQUEST STRATEGIC AUDIT"
   },
+  "legal": {
+    "privacyTitle": "Privacy",
+    "privacyP1": "At The AI Business we process the data you provide (name, email, calculator responses and contact messages) to send you the personalized report, respond to your inquiry and, if you authorize it, maintain commercial communication.",
+    "privacyP2": "We do not sell or share your data with third parties. We use providers with adequate guarantees (email delivery, hosting). Your data is retained as long as necessary for the stated purposes or to comply with legal obligations.",
+    "privacyP3Pre": "You may exercise your rights of access, rectification, erasure, restriction and portability by writing to",
+    "privacyP3Post": ". You have the right to lodge a complaint with the supervisory authority.",
+    "termsTitle": "Terms of use",
+    "termsP1": "The use of this website and the impact calculator is free and informational. The savings and impact figures are estimates based on sector benchmarks and do not constitute a guarantee of results.",
+    "termsP2": "Use of the website for unlawful purposes or mass data extraction is not permitted. We reserve the right to modify these terms and the site content. Continued use after changes implies acceptance.",
+    "termsP3Pre": "For any legal or commercial inquiries:"
+  },
   "contact": {
     "tag": "CONTACT",
     "title": "Let's talk about your case",

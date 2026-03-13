@@ -1,8 +1,10 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, useInView } from "motion/react";
 import { CONTACT_EMAIL } from "../lib/constants";
 
 export function Legal() {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-60px" });
 
@@ -20,21 +22,17 @@ export function Legal() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-[#0B0B0B] mb-4" style={{ fontSize: "1.25rem", fontWeight: 600 }}>
-            Privacidad
+            {t("legal.privacyTitle")}
           </h2>
           <div className="text-[#0B0B0B]/60 space-y-3" style={{ fontSize: "0.9rem", lineHeight: 1.75 }}>
+            <p>{t("legal.privacyP1")}</p>
+            <p>{t("legal.privacyP2")}</p>
             <p>
-              En The AI Business tratamos los datos que nos facilitas (nombre, email, respuestas de la calculadora y mensajes de contacto) para enviarte el informe personalizado, responder a tu consulta y, si lo autorizas, mantener comunicación comercial.
-            </p>
-            <p>
-              No vendemos ni cedemos tus datos a terceros. Utilizamos proveedores con garantías adecuadas (envío de emails, alojamiento). Tus datos se conservan mientras sea necesario para las finalidades indicadas o para cumplir obligaciones legales.
-            </p>
-            <p>
-              Puedes ejercer derechos de acceso, rectificación, supresión, limitación y portabilidad escribiendo a{" "}
+              {t("legal.privacyP3Pre")}{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0B0B0B] underline hover:no-underline">
                 {CONTACT_EMAIL}
               </a>
-              . Tienes derecho a reclamar ante la autoridad de control (AEPD).
+              {t("legal.privacyP3Post")}
             </p>
           </div>
         </motion.div>
@@ -46,17 +44,13 @@ export function Legal() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <h2 className="text-[#0B0B0B] mb-4" style={{ fontSize: "1.25rem", fontWeight: 600 }}>
-            Términos de uso
+            {t("legal.termsTitle")}
           </h2>
           <div className="text-[#0B0B0B]/60 space-y-3" style={{ fontSize: "0.9rem", lineHeight: 1.75 }}>
+            <p>{t("legal.termsP1")}</p>
+            <p>{t("legal.termsP2")}</p>
             <p>
-              El uso de esta web y de la calculadora de impacto es gratuito e informativo. Las cifras de ahorro e impacto son estimaciones basadas en benchmarks del sector y no constituyen una garantía de resultados.
-            </p>
-            <p>
-              No está permitido el uso de la web con fines ilícitos ni la extracción masiva de datos. Nos reservamos el derecho a modificar estos términos y el contenido del sitio. El uso continuado tras cambios implica aceptación.
-            </p>
-            <p>
-              Para cualquier cuestión legal o comercial:{" "}
+              {t("legal.termsP3Pre")}{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0B0B0B] underline hover:no-underline">
                 {CONTACT_EMAIL}
               </a>

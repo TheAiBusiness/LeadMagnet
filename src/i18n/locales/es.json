@@ -76,6 +76,17 @@
     "contact": "Contacto",
     "audit": "SOLICITAR AUDITORÍA ESTRATÉGICA"
   },
+  "legal": {
+    "privacyTitle": "Privacidad",
+    "privacyP1": "En The AI Business tratamos los datos que nos facilitas (nombre, email, respuestas de la calculadora y mensajes de contacto) para enviarte el informe personalizado, responder a tu consulta y, si lo autorizas, mantener comunicación comercial.",
+    "privacyP2": "No vendemos ni cedemos tus datos a terceros. Utilizamos proveedores con garantías adecuadas (envío de emails, alojamiento). Tus datos se conservan mientras sea necesario para las finalidades indicadas o para cumplir obligaciones legales.",
+    "privacyP3Pre": "Puedes ejercer derechos de acceso, rectificación, supresión, limitación y portabilidad escribiendo a",
+    "privacyP3Post": ". Tienes derecho a reclamar ante la autoridad de control (AEPD).",
+    "termsTitle": "Términos de uso",
+    "termsP1": "El uso de esta web y de la calculadora de impacto es gratuito e informativo. Las cifras de ahorro e impacto son estimaciones basadas en benchmarks del sector y no constituyen una garantía de resultados.",
+    "termsP2": "No está permitido el uso de la web con fines ilícitos ni la extracción masiva de datos. Nos reservamos el derecho a modificar estos términos y el contenido del sitio. El uso continuado tras cambios implica aceptación.",
+    "termsP3Pre": "Para cualquier cuestión legal o comercial:"
+  },
   "contact": {
     "tag": "CONTACTO",
     "title": "¿Hablamos de tu caso?",
