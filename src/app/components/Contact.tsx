@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, useInView } from "motion/react";
 import { Calendar, Mail, Send, MessageCircle } from "lucide-react";
 import { CONTACT_EMAIL, WHATSAPP_NUMBER, CALENDLY_URL, API_BASE } from "../lib/constants";
 
 export function Contact() {
+  const { i18n } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
 
@@ -34,7 +36,7 @@ export function Contact() {
       setSending(true);
       const res = await fetch(`${API_BASE}/api/send-contact`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: n, email: e, message: m }),
+        body: JSON.stringify({ name: n, email: e, message: m, lang: i18n.language }),
       });
       if (!res.ok) throw new Error();
       setSent(true);

@@ -213,7 +213,8 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 app.post("/api/send-contact", rateLimit, async (req, res) => {
   if (!setupSG()) return res.status(500).json({ error: "SendGrid not configured" });
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message, lang: rawContactLang } = req.body;
+    const contactLang = rawContactLang === "en" ? "en" : "es";
     const emailStr = typeof email === "string" ? email.trim() : "";
     const messageStr = typeof message === "string" ? message.trim().slice(0, 5000) : "";
     if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) return res.status(400).json({ error: "Email válido requerido" });
@@ -227,10 +228,20 @@ app.post("/api/send-contact", rateLimit, async (req, res) => {
       html: `<div style="font-family:sans-serif;font-size:14px;line-height:1.8;padding:20px;max-width:500px;"><h2 style="margin:0 0 20px;">Nuevo contacto</h2><p><strong>Nombre:</strong> ${nameSafe || "-"}<br><strong>Email:</strong> ${emailStr}</p><div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-top:16px;white-space:pre-wrap;">${messageSafe}</div></div>`,
     });
 
+    const contactSubject = contactLang === "en"
+      ? "We've received your message — The AI Business"
+      : "Hemos recibido tu mensaje — The AI Business";
+    const contactThanks = contactLang === "en"
+      ? `Thank you${nameSafe ? `, ${nameSafe}` : ""}`
+      : `Gracias${nameSafe ? `, ${nameSafe}` : ""}`;
+    const contactReply = contactLang === "en"
+      ? "We'll get back to you within 24 hours."
+      : "Te responderemos en menos de 24 horas.";
+    const contactCta = contactLang === "en" ? "Book a call" : "Reservar llamada";
     await sgMail.send({
       to: emailStr, from: from(),
-      subject: "Hemos recibido tu mensaje — The AI Business",
-      html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.04);"><h1 style="font-size:20px;color:#0B0B0B;margin:0 0 16px;">Gracias${nameSafe ? `, ${nameSafe}` : ""} 👋</h1><p style="color:#666;line-height:1.7;margin:0 0 24px;">Te responderemos en menos de 24 horas.</p><div style="text-align:center;"><a href="${calendlyUrl()}" style="display:inline-block;padding:12px 28px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;">Reservar llamada</a></div></div></div>`,
+      subject: contactSubject,
+      html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.04);"><h1 style="font-size:20px;color:#0B0B0B;margin:0 0 16px;">${contactThanks} 👋</h1><p style="color:#666;line-height:1.7;margin:0 0 24px;">${contactReply}</p><div style="text-align:center;"><a href="${calendlyUrl()}" style="display:inline-block;padding:12px 28px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;">${contactCta}</a></div></div></div>`,
     });
 
     // Guardar mensaje de contacto en Supabase vía RPC

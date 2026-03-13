@@ -144,6 +144,26 @@ const i18n: Record<Lang, Translations> = {
     taskDescAgenda: "Scheduling inteligente",
     taskDescFacturacion: "Procesamiento automático",
     taskDescContenido: "Generación asistida por AI",
+    "task.Atención cliente": "Atención cliente",
+    "task.Emails": "Emails",
+    "task.Entrada datos": "Entrada datos",
+    "task.Informes": "Informes",
+    "task.Leads": "Leads",
+    "task.Agenda": "Agenda",
+    "task.Facturación": "Facturación",
+    "task.Contenido": "Contenido",
+    "sector.SaaS": "SaaS",
+    "sector.Ecommerce": "Ecommerce",
+    "sector.Logística": "Logística",
+    "sector.Agencia": "Agencia",
+    "sector.Servicios": "Servicios",
+    "sector.Inmobiliaria": "Inmobiliaria",
+    "sector.Salud": "Salud",
+    "sector.Otros": "Otros",
+    "priority.Reducir costes": "Reducir costes",
+    "priority.Más ventas": "Más ventas",
+    "priority.Mejor soporte": "Mejor soporte",
+    "priority.Acelerar procesos": "Acelerar procesos",
   },
   en: {
     reportHeader: "AI POTENTIAL REPORT",
@@ -282,6 +302,26 @@ const i18n: Record<Lang, Translations> = {
     taskDescAgenda: "Smart scheduling",
     taskDescFacturacion: "Automatic processing",
     taskDescContenido: "AI-assisted generation",
+    "task.Atención cliente": "Customer service",
+    "task.Emails": "Emails",
+    "task.Entrada datos": "Data entry",
+    "task.Informes": "Reports",
+    "task.Leads": "Leads",
+    "task.Agenda": "Scheduling",
+    "task.Facturación": "Billing",
+    "task.Contenido": "Content",
+    "sector.SaaS": "SaaS",
+    "sector.Ecommerce": "Ecommerce",
+    "sector.Logística": "Logistics",
+    "sector.Agencia": "Agency",
+    "sector.Servicios": "Services",
+    "sector.Inmobiliaria": "Real estate",
+    "sector.Salud": "Healthcare",
+    "sector.Otros": "Other",
+    "priority.Reducir costes": "Reduce costs",
+    "priority.Más ventas": "More sales",
+    "priority.Mejor soporte": "Better support",
+    "priority.Acelerar procesos": "Accelerate processes",
   },
 };
 
@@ -397,14 +437,17 @@ export function buildReportEmailHtml(
   const { name, sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc } = params;
   const { fmt, esc, calendlyUrl } = helpers;
   const T = (key: string, r?: Record<string, string | number>) => t(lang, key, r);
+  const tTask = (tk: string) => T(`task.${tk}`);
+  const tSector = (s: string) => T(`sector.${s}`);
+  const tPriority = (p: string) => T(`priority.${p}`);
 
   const locale = lang === "en" ? "en-US" : "es-ES";
   const today = new Date().toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
   const sName = esc(name);
-  const sSector = esc(sector);
+  const sSector = esc(tSector(sector));
   const sTeam = esc(teamSize);
   const sRevenue = esc(revenue);
-  const sPriority = esc(priority);
+  const sPriority = esc(tPriority(priority));
   const sResp = esc(respTime);
   const sNewResp = esc(calc.newResp);
 
@@ -420,10 +463,10 @@ export function buildReportEmailHtml(
     const hSaved = Math.round(hoursPerTask * 4.33 * adjusted);
     const eurSaved = Math.round(hSaved * costH * overhead);
     const descKey = TASK_DESC_KEYS[tk];
-    return { label: tk, savings: adjusted, hSaved, eurSaved, desc: descKey ? T(descKey) : "" };
+    return { label: tk, displayLabel: tTask(tk), savings: adjusted, hSaved, eurSaved, desc: descKey ? T(descKey) : "" };
   });
 
-  const firstTaskLabel = taskBreakdown[0]?.label ?? T("defaultTasks");
+  const firstTaskLabel = taskBreakdown[0]?.displayLabel ?? T("defaultTasks");
   const firstTaskPct = taskBreakdown[0] != null ? Math.round(taskBreakdown[0].savings * 100) : 60;
   const ticketStr = avgTicket >= 1000 ? Math.round(avgTicket / 1000) + "K" : fmt(avgTicket);
 
@@ -453,9 +496,9 @@ export function buildReportEmailHtml(
 
   const sectorEffPct = Math.round((sectorEff[sector] ?? 1) * 100);
   const overheadPct = Math.round(((teamOverhead[teamSize] ?? 1) - 1) * 100);
-  const factorsText = esc(`${T("factors")}: ${T("aiEfficiency")} ${sector} (${sectorEffPct}%), ${usesAI ? T("aiDiscountExisting") : T("aiFullPotential")}, ${T("coordOverhead")} ${teamSize} (${overheadPct}% ${T("extra")}).`);
+  const factorsText = esc(`${T("factors")}: ${T("aiEfficiency")} ${tSector(sector)} (${sectorEffPct}%), ${usesAI ? T("aiDiscountExisting") : T("aiFullPotential")}, ${T("coordOverhead")} ${teamSize} (${overheadPct}% ${T("extra")}).`);
 
-  const tasksList = taskBreakdown.map((tk) => `<tr><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;"><strong>${esc(tk.label)}</strong><br><span style="font-size:12px;color:#0B0B0B99;">${esc(tk.desc)} · ${Math.round(tk.savings * 100)}% ${T("automatable")}</span></td><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${tk.hSaved}h · €${fmt(tk.eurSaved)}</td></tr>`).join("");
+  const tasksList = taskBreakdown.map((tk) => `<tr><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;"><strong>${esc(tk.displayLabel)}</strong><br><span style="font-size:12px;color:#0B0B0B99;">${esc(tk.desc)} · ${Math.round(tk.savings * 100)}% ${T("automatable")}</span></td><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${tk.hSaved}h · €${fmt(tk.eurSaved)}</td></tr>`).join("");
 
   const ideasHtml = topIdeas.map((idea, i) => {
     const ik = IDEA_KEYS[idea.id];
@@ -474,7 +517,7 @@ export function buildReportEmailHtml(
       </div>`;
   }).join("");
 
-  const timelineTaskNames = taskBreakdown.length >= 2 ? taskBreakdown.slice(0, 2).map(tk => tk.label).join(` ${T("and")} `) : taskBreakdown[0]?.label ?? "";
+  const timelineTaskNames = taskBreakdown.length >= 2 ? taskBreakdown.slice(0, 2).map(tk => tk.displayLabel).join(` ${T("and")} `) : taskBreakdown[0]?.displayLabel ?? "";
   const timelinePhases = [
     { week: T("tw12"), title: T("tw12Title"), desc: T("tw12Desc", { count: tasks.length }) },
     { week: T("tw34"), title: T("tw34Title"), desc: T("tw34Desc", { tasks: timelineTaskNames, extra: taskBreakdown.length > 2 ? T("tw34Extra", { count: taskBreakdown.length - 2 }) : "" }) },
@@ -483,7 +526,7 @@ export function buildReportEmailHtml(
 
   const benchmarkText = usesAI
     ? T("adoptionYes", { pct: sectorAdoption })
-    : T("adoptionNo", { pct: sectorAdoption, sector });
+    : T("adoptionNo", { pct: sectorAdoption, sector: tSector(sector) });
   const respCompare = respTime > sectorAvgResp
     ? T("aboveAvg", { diff: respTime - sectorAvgResp, newResp: calc.newResp })
     : T("belowAvg", { diff: sectorAvgResp - respTime });
