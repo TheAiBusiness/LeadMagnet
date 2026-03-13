@@ -115,7 +115,7 @@
     "errorMailtoFallback": "Your email client has been opened. Send it from there.",
     "mailtoSubject": "Contact — The AI Business",
     "mailtoNoName": "No name",
-    "whatsappText": "Hi, I'd like to know more about your AI services."
+    "whatsappText": "Hi, I'd like to know more about your services at The AI Business."
   },
   "calculatorPage": {
     "back": "Back"
