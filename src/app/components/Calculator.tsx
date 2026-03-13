@@ -686,6 +686,7 @@ export function Calculator({ id }: CalculatorProps) {
     const payload = {
       name, email, sector, teamSize, revenue, usesAI,
       tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc,
+      lang: i18n.language,
       createdAt: new Date().toISOString(),
     };
 

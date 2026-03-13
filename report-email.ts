@@ -1,68 +1,369 @@
 /**
  * Genera el HTML completo del informe por email (mismo contenido que la web).
+ * Soporta idiomas: es (español) y en (inglés).
  */
 
-const TASK_SAVINGS: Record<string, { savings: number; desc: string }> = {
-  "Atención cliente": { savings: 0.7, desc: "Chatbots AI + routing inteligente" },
-  Emails: { savings: 0.6, desc: "Redacción y respuesta automatizada" },
-  "Entrada datos": { savings: 0.85, desc: "OCR + extracción automática" },
-  Informes: { savings: 0.75, desc: "Generación y distribución auto." },
-  Leads: { savings: 0.65, desc: "Scoring y nurturing con AI" },
-  Agenda: { savings: 0.8, desc: "Scheduling inteligente" },
-  Facturación: { savings: 0.7, desc: "Procesamiento automático" },
-  Contenido: { savings: 0.5, desc: "Generación asistida por AI" },
+type Lang = "es" | "en";
+type Translations = Record<string, string>;
+
+const i18n: Record<Lang, Translations> = {
+  es: {
+    reportHeader: "INFORME DE POTENCIAL AI",
+    reportTitle: "Informe de Potencial AI",
+    preparedFor: "Preparado para",
+    yourBusiness: "tu negocio",
+    profileSection: "PERFIL DE EMPRESA",
+    sector: "Sector",
+    team: "Equipo",
+    people: "personas",
+    billing: "Facturación",
+    avgTicket: "Ticket medio",
+    usesAI: "Usa AI",
+    aiYes: "Sí, actualmente",
+    aiNo: "Aún no",
+    support247: "Soporte 24/7",
+    supportYes: "Sí, necesario",
+    supportNo: "Horario estándar",
+    priority: "Prioridad",
+    aiScoreSection: "AI SCORE",
+    potential: "Potencial",
+    financialSection: "IMPACTO FINANCIERO",
+    opSavingsMonth: "Ahorro operativo / mes",
+    addRevMonth: "Ingreso adicional / mes",
+    breakdownSection: "DESGLOSE DEL CÁLCULO",
+    hoursFreed: "h liberadas",
+    teamOverhead: "overhead equipo",
+    leadsConv: "leads × conv. boost",
+    ticket: "ticket",
+    totalMonthly: "Impacto total mensual",
+    factors: "Factores",
+    aiEfficiency: "eficiencia AI en",
+    aiDiscountExisting: "descuento por IA existente (–30%)",
+    aiFullPotential: "sin IA previa (100% potencial)",
+    coordOverhead: "overhead coordinación equipo",
+    extra: "extra",
+    totalEstimated: "IMPACTO TOTAL ESTIMADO",
+    perMonth: "/mes",
+    perYear: "/año",
+    ofRevenue: "de tu facturación",
+    metricsSection: "MÉTRICAS OPERATIVAS",
+    hoursFreedLabel: "Horas liberadas",
+    hoursPerMonth: "/ mes",
+    fromWeekly: "De",
+    weeklyRepetitive: "h/sem repetitivas, tu equipo recuperará",
+    monthlyHours: "h mensuales.",
+    costSaved: "Coste/hora ahorrado",
+    costCalc: "= ahorro mensual.",
+    responseTime: "Tiempo de respuesta",
+    improvement: "Mejora del",
+    sectorAvg: "La media en",
+    is: "es",
+    additionalRev: "Revenue adicional",
+    onLeads: "Sobre",
+    leadsWithTicket: "leads con ticket",
+    benchmarkSection: "BENCHMARK SECTORIAL",
+    aiAdoption: "Adopción AI en el sector",
+    ofCompanies: "de empresas",
+    adoptionYes: "Ya formas parte del {pct}% que usa AI. El siguiente paso es escalar.",
+    adoptionNo: "El {pct}% de empresas en {sector} ya usa AI. Es momento de actuar.",
+    sectorResponse: "Resp. media del sector",
+    aboveAvg: "Estás {diff}min por encima. Con AI llegarás a {newResp}min.",
+    belowAvg: "Estás {diff}min por debajo de la media. Con AI serás referente.",
+    taskSection: "AUTOMATIZACIÓN POR TAREA",
+    automatable: "automatizable",
+    recSection: "RECOMENDACIÓN PERSONALIZADA",
+    basedOnPriority: "Basado en tu prioridad:",
+    quickWinsSection: "QUICK WINS — SOLUCIONES INMEDIATAS",
+    quickWinsSub: "3 ideas seleccionadas para tu perfil",
+    impact: "Impacto",
+    stackSection: "STACK COMBINADO — IMPACTO ESTIMADO",
+    stackDesc: "Poniendo en marcha las 3 ideas, tu equipo de {team} puede alcanzar <strong>€{savings}/mes</strong> ahorro y <strong>€{rev}/mes</strong> adicionales en 4–6 semanas.",
+    timelineSection: "TIMELINE SUGERIDO",
+    tw12: "Sem 1–2",
+    tw12Title: "Auditoría y setup",
+    tw12Desc: "Análisis profundo de tus {count} procesos clave y diseño de la arquitectura AI.",
+    tw34: "Sem 3–4",
+    tw34Title: "Implementación",
+    tw34Desc: "Despliegue de automatizaciones para {tasks}{extra}.",
+    tw34Extra: " (+{count} más)",
+    tw56: "Sem 5–6",
+    tw56Title: "Optimización y ROI",
+    tw56Desc: "Fine-tuning y medición. Objetivo: {hours}h liberadas y €{total} de impacto/mes.",
+    ctaBtn: "Reservar sesión estratégica gratuita →",
+    ctaSub: "Sesión de 30 min · Sin compromiso",
+    footer: "* Estimaciones basadas en benchmarks del sector. Los resultados pueden variar.",
+    recReduceCosts: "Con un ahorro potencial de €{savings}/mes, recomendamos empezar automatizando {task} ({pct}% automatizable). En 6 semanas tendrás ROI positivo.",
+    recMoreSales: "Tu pipeline de {leads} leads/mes con ticket medio de €{ticket} tiene un potencial de €{rev} adicionales/mes. {h24Note} el conversion rate sube significativamente.",
+    recMoreSalesH24Yes: "Con atención 24/7,",
+    recMoreSalesH24No: "Activando atención 24/7,",
+    recBetterSupport: "Reducir tu tiempo de respuesta de {from}min a {to}min (–{improve}%) impactará directamente en retención. {h24Note}",
+    recBetterSupportH24Yes: "Ya cubrís 24/7, ideal para chatbots AI.",
+    recBetterSupportH24No: "Recomendamos activar soporte 24/7 con chatbots AI.",
+    recAccelerate: "Con {hours}h/semana en tareas repetitivas y un equipo de {team}, la automatización liberará {saved}h/mes que tu equipo puede dedicar a trabajo de alto valor.",
+    emailSubject: "{name}tu informe AI — € {total}/mes",
+    emailSubjectComma: ", ",
+    defaultTasks: "las tareas más repetitivas",
+    scoreVeryHigh: "Muy alto",
+    scoreVeryHighInsight: "Tu negocio tiene un potencial de transformación excepcional.",
+    scoreHigh: "Alto",
+    scoreHighInsight: "Estás en una posición excelente para obtener ROI rápido con automatización AI.",
+    scoreModerate: "Moderado",
+    scoreModerateInsight: "Hay oportunidades claras de mejora. Empieza con las tareas de mayor impacto.",
+    scoreInitial: "Inicial",
+    scoreInitialInsight: "Empezar con AI ahora te dará ventaja competitiva.",
+    ideaVirtualAssistant: "Asistente virtual para clientes",
+    ideaVirtualAssistantDesc: "Respuestas automáticas a las dudas más frecuentes de tus clientes, 24/7.",
+    ideaAutoWorkflows: "Automatizar tareas repetitivas",
+    ideaAutoWorkflowsDesc: "Dejar de {tasks} a mano — se configura una vez y funciona solo.",
+    ideaAutoWorkflowsFallback: "repetir tareas",
+    ideaSmartCrm: "Seguimiento comercial automático",
+    ideaSmartCrmDesc: "Que ningún cliente interesado se quede sin respuesta. Seguimiento y recordatorios automáticos.",
+    ideaAutoContent: "Creación rápida de contenidos",
+    ideaAutoContentDesc: "Textos para web, emails y redes en minutos en vez de horas, con tu tono de marca.",
+    ideaLiveDashboard: "Panel de control en tiempo real",
+    ideaLiveDashboardDesc: "Ver cómo va tu negocio de un vistazo, siempre actualizado, sin preparar informes a mano.",
+    ideaSmartScheduling: "Reservas y agenda automática",
+    ideaSmartSchedulingDesc: "Tus clientes reservan cita solos desde la web. Recordatorios automáticos incluidos.",
+    ideaAutoBilling: "Facturación en piloto automático",
+    ideaAutoBillingDesc: "Facturas, cobros y recordatorios de pago generados y enviados sin intervención manual.",
+    ideaSmartEmail: "Comunicación personalizada a escala",
+    ideaSmartEmailDesc: "El mensaje justo a cada cliente en el momento adecuado, de forma automática.",
+    ideaSupportTriage: "Clasificación inteligente de consultas",
+    ideaSupportTriageDesc: "Cada consulta se clasifica y dirige al responsable correcto sin intervención manual.",
+    taskMapEntradaDatos: "pasar datos",
+    taskMapEmails: "enviar emails",
+    taskMapFacturacion: "facturar",
+    taskMapInformes: "hacer informes",
+    taskMapAgenda: "coordinar agenda",
+    and: "y",
+    taskDescAtencionCliente: "Chatbots AI + routing inteligente",
+    taskDescEmails: "Redacción y respuesta automatizada",
+    taskDescEntradaDatos: "OCR + extracción automática",
+    taskDescInformes: "Generación y distribución auto.",
+    taskDescLeads: "Scoring y nurturing con AI",
+    taskDescAgenda: "Scheduling inteligente",
+    taskDescFacturacion: "Procesamiento automático",
+    taskDescContenido: "Generación asistida por AI",
+  },
+  en: {
+    reportHeader: "AI POTENTIAL REPORT",
+    reportTitle: "AI Potential Report",
+    preparedFor: "Prepared for",
+    yourBusiness: "your business",
+    profileSection: "COMPANY PROFILE",
+    sector: "Sector",
+    team: "Team",
+    people: "people",
+    billing: "Revenue",
+    avgTicket: "Avg. ticket",
+    usesAI: "Uses AI",
+    aiYes: "Yes, currently",
+    aiNo: "Not yet",
+    support247: "24/7 Support",
+    supportYes: "Yes, required",
+    supportNo: "Standard hours",
+    priority: "Priority",
+    aiScoreSection: "AI SCORE",
+    potential: "Potential",
+    financialSection: "FINANCIAL IMPACT",
+    opSavingsMonth: "Operational savings / month",
+    addRevMonth: "Additional revenue / month",
+    breakdownSection: "CALCULATION BREAKDOWN",
+    hoursFreed: "h freed",
+    teamOverhead: "team overhead",
+    leadsConv: "leads × conv. boost",
+    ticket: "ticket",
+    totalMonthly: "Total monthly impact",
+    factors: "Factors",
+    aiEfficiency: "AI efficiency in",
+    aiDiscountExisting: "discount for existing AI (–30%)",
+    aiFullPotential: "no prior AI (100% potential)",
+    coordOverhead: "team coordination overhead",
+    extra: "extra",
+    totalEstimated: "TOTAL ESTIMATED IMPACT",
+    perMonth: "/mo",
+    perYear: "/yr",
+    ofRevenue: "of your revenue",
+    metricsSection: "OPERATIONAL METRICS",
+    hoursFreedLabel: "Hours freed",
+    hoursPerMonth: "/ month",
+    fromWeekly: "From",
+    weeklyRepetitive: "h/wk repetitive, your team recovers",
+    monthlyHours: "h monthly.",
+    costSaved: "Cost/hour saved",
+    costCalc: "= monthly savings.",
+    responseTime: "Response time",
+    improvement: "Improvement of",
+    sectorAvg: "Average in",
+    is: "is",
+    additionalRev: "Additional revenue",
+    onLeads: "From",
+    leadsWithTicket: "leads with ticket",
+    benchmarkSection: "SECTOR BENCHMARK",
+    aiAdoption: "AI adoption in sector",
+    ofCompanies: "of companies",
+    adoptionYes: "You're already part of the {pct}% using AI. Next step: scale.",
+    adoptionNo: "{pct}% of companies in {sector} already use AI. Time to act.",
+    sectorResponse: "Sector avg. response",
+    aboveAvg: "You're {diff}min above average. With AI you'll reach {newResp}min.",
+    belowAvg: "You're {diff}min below average. With AI you'll be a reference.",
+    taskSection: "AUTOMATION BY TASK",
+    automatable: "automatable",
+    recSection: "PERSONALIZED RECOMMENDATION",
+    basedOnPriority: "Based on your priority:",
+    quickWinsSection: "QUICK WINS — IMMEDIATE SOLUTIONS",
+    quickWinsSub: "3 ideas selected for your profile",
+    impact: "Impact",
+    stackSection: "COMBINED STACK — ESTIMATED IMPACT",
+    stackDesc: "By implementing all 3 ideas, your team of {team} can achieve <strong>€{savings}/mo</strong> savings and <strong>€{rev}/mo</strong> additional revenue in 4–6 weeks.",
+    timelineSection: "SUGGESTED TIMELINE",
+    tw12: "Wk 1–2",
+    tw12Title: "Audit & setup",
+    tw12Desc: "Deep analysis of your {count} key processes and AI architecture design.",
+    tw34: "Wk 3–4",
+    tw34Title: "Implementation",
+    tw34Desc: "Deployment of automations for {tasks}{extra}.",
+    tw34Extra: " (+{count} more)",
+    tw56: "Wk 5–6",
+    tw56Title: "Optimization & ROI",
+    tw56Desc: "Fine-tuning and measurement. Target: {hours}h freed and €{total} impact/mo.",
+    ctaBtn: "Book a free strategy session →",
+    ctaSub: "30 min session · No commitment",
+    footer: "* Estimates based on sector benchmarks. Actual results may vary.",
+    recReduceCosts: "With a potential saving of €{savings}/mo, we recommend starting by automating {task} ({pct}% automatable). You'll see positive ROI in 6 weeks.",
+    recMoreSales: "Your pipeline of {leads} leads/mo with avg. ticket of €{ticket} has a potential of €{rev} additional/mo. {h24Note} the conversion rate increases significantly.",
+    recMoreSalesH24Yes: "With 24/7 support,",
+    recMoreSalesH24No: "By enabling 24/7 support,",
+    recBetterSupport: "Reducing response time from {from}min to {to}min (–{improve}%) will directly impact retention. {h24Note}",
+    recBetterSupportH24Yes: "You already cover 24/7, ideal for AI chatbots.",
+    recBetterSupportH24No: "We recommend enabling 24/7 support with AI chatbots.",
+    recAccelerate: "With {hours}h/week on repetitive tasks and a team of {team}, automation will free {saved}h/mo your team can dedicate to high-value work.",
+    emailSubject: "{name}your AI report — € {total}/mo",
+    emailSubjectComma: ", ",
+    defaultTasks: "the most repetitive tasks",
+    scoreVeryHigh: "Very high",
+    scoreVeryHighInsight: "Your business has exceptional transformation potential.",
+    scoreHigh: "High",
+    scoreHighInsight: "You're in an excellent position to get fast ROI with AI automation.",
+    scoreModerate: "Moderate",
+    scoreModerateInsight: "There are clear improvement opportunities. Start with the highest-impact tasks.",
+    scoreInitial: "Initial",
+    scoreInitialInsight: "Starting with AI now will give you a competitive edge.",
+    ideaVirtualAssistant: "Virtual assistant for customers",
+    ideaVirtualAssistantDesc: "Automatic answers to your customers' most common questions, 24/7.",
+    ideaAutoWorkflows: "Automate repetitive tasks",
+    ideaAutoWorkflowsDesc: "Stop doing {tasks} manually — set it up once and it runs itself.",
+    ideaAutoWorkflowsFallback: "repeating tasks",
+    ideaSmartCrm: "Automatic sales follow-up",
+    ideaSmartCrmDesc: "No interested customer goes unanswered. Automatic follow-ups and reminders.",
+    ideaAutoContent: "Fast content creation",
+    ideaAutoContentDesc: "Web, email and social media copy in minutes instead of hours, in your brand tone.",
+    ideaLiveDashboard: "Real-time dashboard",
+    ideaLiveDashboardDesc: "See how your business is doing at a glance, always up to date, no manual reports.",
+    ideaSmartScheduling: "Automatic booking & scheduling",
+    ideaSmartSchedulingDesc: "Your clients book appointments on their own from your website. Auto reminders included.",
+    ideaAutoBilling: "Billing on autopilot",
+    ideaAutoBillingDesc: "Invoices, payments and reminders generated and sent without manual intervention.",
+    ideaSmartEmail: "Personalized communication at scale",
+    ideaSmartEmailDesc: "The right message to each customer at the right time, automatically.",
+    ideaSupportTriage: "Smart query classification",
+    ideaSupportTriageDesc: "Each query is classified and routed to the right person without manual intervention.",
+    taskMapEntradaDatos: "entering data",
+    taskMapEmails: "sending emails",
+    taskMapFacturacion: "invoicing",
+    taskMapInformes: "making reports",
+    taskMapAgenda: "scheduling",
+    and: "and",
+    taskDescAtencionCliente: "AI chatbots + smart routing",
+    taskDescEmails: "Automated drafting & responses",
+    taskDescEntradaDatos: "OCR + automatic extraction",
+    taskDescInformes: "Auto generation & distribution",
+    taskDescLeads: "AI scoring & nurturing",
+    taskDescAgenda: "Smart scheduling",
+    taskDescFacturacion: "Automatic processing",
+    taskDescContenido: "AI-assisted generation",
+  },
+};
+
+function t(lang: Lang, key: string, replacements?: Record<string, string | number>): string {
+  let val = i18n[lang][key] ?? i18n.es[key] ?? key;
+  if (replacements) {
+    for (const [k, v] of Object.entries(replacements)) {
+      val = val.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    }
+  }
+  return val;
+}
+
+const TASK_DESC_KEYS: Record<string, string> = {
+  "Atención cliente": "taskDescAtencionCliente",
+  Emails: "taskDescEmails",
+  "Entrada datos": "taskDescEntradaDatos",
+  Informes: "taskDescInformes",
+  Leads: "taskDescLeads",
+  Agenda: "taskDescAgenda",
+  Facturación: "taskDescFacturacion",
+  Contenido: "taskDescContenido",
+};
+
+const TASK_SAVINGS: Record<string, number> = {
+  "Atención cliente": 0.7, Emails: 0.6, "Entrada datos": 0.85,
+  Informes: 0.75, Leads: 0.65, Agenda: 0.8, Facturación: 0.7, Contenido: 0.5,
 };
 
 const SECTOR_AI_ADOPTION: Record<string, number> = { SaaS: 68, Agencia: 54, Ecommerce: 61, Salud: 38, Servicios: 42, Inmobiliaria: 29, Logística: 45, Otros: 40 };
 const SECTOR_AVG_RESPONSE: Record<string, number> = { Ecommerce: 35, SaaS: 20, Agencia: 45, Servicios: 55, Salud: 30, Inmobiliaria: 75, Logística: 50, Otros: 40 };
 
+const IDEA_KEYS: Record<string, { title: string; desc: string }> = {
+  "virtual-assistant": { title: "ideaVirtualAssistant", desc: "ideaVirtualAssistantDesc" },
+  "auto-workflows": { title: "ideaAutoWorkflows", desc: "ideaAutoWorkflowsDesc" },
+  "smart-crm": { title: "ideaSmartCrm", desc: "ideaSmartCrmDesc" },
+  "auto-content": { title: "ideaAutoContent", desc: "ideaAutoContentDesc" },
+  "live-dashboard": { title: "ideaLiveDashboard", desc: "ideaLiveDashboardDesc" },
+  "smart-scheduling": { title: "ideaSmartScheduling", desc: "ideaSmartSchedulingDesc" },
+  "auto-billing": { title: "ideaAutoBilling", desc: "ideaAutoBillingDesc" },
+  "smart-email": { title: "ideaSmartEmail", desc: "ideaSmartEmailDesc" },
+  "support-triage": { title: "ideaSupportTriage", desc: "ideaSupportTriageDesc" },
+};
+
 interface TechIdea {
   id: string;
-  title: string;
   taskAffinity: string[];
   priorityAffinity: string[];
   sectorBoost: string[];
   needs24h: boolean;
-  setupTime: string;
-  impact: string;
-  getDesc: (ctx: IdeaCtx) => string;
+  setupTime: Record<Lang, string>;
+  impact: Record<Lang, string>;
 }
 
 interface IdeaCtx {
-  sector: string;
-  teamSize: string;
-  tasks: string[];
-  priority: string;
-  hours: number;
-  costH: number;
-  leads: number;
-  respTime: number;
-  h24: boolean | null;
-  usesAI: boolean | null;
-  hrsSaved: number;
-  monthlySav: number;
-  addRev: number;
-  newResp: number;
+  sector: string; teamSize: string; tasks: string[]; priority: string;
+  hours: number; costH: number; leads: number; respTime: number;
+  h24: boolean | null; usesAI: boolean | null;
+  hrsSaved: number; monthlySav: number; addRev: number; newResp: number;
 }
 
-const taskMap: Record<string, string> = { "Entrada datos": "pasar datos", "Emails": "enviar emails", "Facturación": "facturar", "Informes": "hacer informes", "Agenda": "coordinar agenda" };
+const TASK_MAP_KEYS: Record<string, string> = {
+  "Entrada datos": "taskMapEntradaDatos", Emails: "taskMapEmails",
+  Facturación: "taskMapFacturacion", Informes: "taskMapInformes", Agenda: "taskMapAgenda",
+};
 
 const TECH_IDEAS: TechIdea[] = [
-  { id: "virtual-assistant", title: "Asistente virtual para clientes", taskAffinity: ["Atención cliente", "Leads"], priorityAffinity: ["Mejor soporte", "Más ventas"], sectorBoost: ["SaaS", "Ecommerce", "Servicios", "Salud", "Inmobiliaria"], needs24h: true, setupTime: "1–2 semanas", impact: "Alto", getDesc: () => "Respuestas automáticas a las dudas más frecuentes de tus clientes, 24/7." },
-  { id: "auto-workflows", title: "Automatizar tareas repetitivas", taskAffinity: ["Entrada datos", "Emails", "Facturación", "Informes", "Agenda"], priorityAffinity: ["Acelerar procesos", "Reducir costes"], sectorBoost: ["Agencia", "Logística", "Servicios", "Ecommerce", "SaaS"], needs24h: false, setupTime: "2–3 semanas", impact: "Alto", getDesc: (ctx) => { const relevant = ctx.tasks.filter(t => taskMap[t]).slice(0, 2).map(t => taskMap[t]); return `Dejar de ${relevant.length > 0 ? relevant.join(" y ") : "repetir tareas"} a mano — se configura una vez y funciona solo.`; } },
-  { id: "smart-crm", title: "Seguimiento comercial automático", taskAffinity: ["Leads", "Emails", "Agenda"], priorityAffinity: ["Más ventas", "Acelerar procesos"], sectorBoost: ["Servicios", "Inmobiliaria", "Agencia", "Ecommerce", "SaaS"], needs24h: false, setupTime: "2–4 semanas", impact: "Alto", getDesc: () => "Que ningún cliente interesado se quede sin respuesta. Seguimiento y recordatorios automáticos." },
-  { id: "auto-content", title: "Creación rápida de contenidos", taskAffinity: ["Contenido", "Emails"], priorityAffinity: ["Más ventas", "Acelerar procesos"], sectorBoost: ["Agencia", "Ecommerce", "SaaS"], needs24h: false, setupTime: "1 semana", impact: "Medio", getDesc: () => "Textos para web, emails y redes en minutos en vez de horas, con tu tono de marca." },
-  { id: "live-dashboard", title: "Panel de control en tiempo real", taskAffinity: ["Informes", "Entrada datos"], priorityAffinity: ["Acelerar procesos", "Reducir costes"], sectorBoost: ["Ecommerce", "Agencia", "SaaS", "Logística"], needs24h: false, setupTime: "1–2 semanas", impact: "Medio", getDesc: () => "Ver cómo va tu negocio de un vistazo, siempre actualizado, sin preparar informes a mano." },
-  { id: "smart-scheduling", title: "Reservas y agenda automática", taskAffinity: ["Agenda", "Leads"], priorityAffinity: ["Acelerar procesos", "Más ventas"], sectorBoost: ["Servicios", "Salud", "Inmobiliaria", "Agencia"], needs24h: false, setupTime: "3–5 días", impact: "Medio", getDesc: () => "Tus clientes reservan cita solos desde la web. Recordatorios automáticos incluidos." },
-  { id: "auto-billing", title: "Facturación en piloto automático", taskAffinity: ["Facturación", "Informes", "Entrada datos"], priorityAffinity: ["Reducir costes", "Acelerar procesos"], sectorBoost: ["Servicios", "Agencia", "Ecommerce", "Logística"], needs24h: false, setupTime: "2–3 semanas", impact: "Alto", getDesc: () => "Facturas, cobros y recordatorios de pago generados y enviados sin intervención manual." },
-  { id: "smart-email", title: "Comunicación personalizada a escala", taskAffinity: ["Emails", "Leads", "Contenido"], priorityAffinity: ["Más ventas", "Reducir costes"], sectorBoost: ["Ecommerce", "Servicios", "Inmobiliaria", "Salud"], needs24h: false, setupTime: "1–2 semanas", impact: "Medio–Alto", getDesc: () => "El mensaje justo a cada cliente en el momento adecuado, de forma automática." },
-  { id: "support-triage", title: "Clasificación inteligente de consultas", taskAffinity: ["Atención cliente", "Emails", "Informes"], priorityAffinity: ["Mejor soporte", "Reducir costes"], sectorBoost: ["Salud", "Logística", "Servicios", "Ecommerce"], needs24h: true, setupTime: "1–2 semanas", impact: "Alto", getDesc: () => "Cada consulta se clasifica y dirige al responsable correcto sin intervención manual." },
+  { id: "virtual-assistant", taskAffinity: ["Atención cliente", "Leads"], priorityAffinity: ["Mejor soporte", "Más ventas"], sectorBoost: ["SaaS", "Ecommerce", "Servicios", "Salud", "Inmobiliaria"], needs24h: true, setupTime: { es: "1–2 semanas", en: "1–2 weeks" }, impact: { es: "Alto", en: "High" } },
+  { id: "auto-workflows", taskAffinity: ["Entrada datos", "Emails", "Facturación", "Informes", "Agenda"], priorityAffinity: ["Acelerar procesos", "Reducir costes"], sectorBoost: ["Agencia", "Logística", "Servicios", "Ecommerce", "SaaS"], needs24h: false, setupTime: { es: "2–3 semanas", en: "2–3 weeks" }, impact: { es: "Alto", en: "High" } },
+  { id: "smart-crm", taskAffinity: ["Leads", "Emails", "Agenda"], priorityAffinity: ["Más ventas", "Acelerar procesos"], sectorBoost: ["Servicios", "Inmobiliaria", "Agencia", "Ecommerce", "SaaS"], needs24h: false, setupTime: { es: "2–4 semanas", en: "2–4 weeks" }, impact: { es: "Alto", en: "High" } },
+  { id: "auto-content", taskAffinity: ["Contenido", "Emails"], priorityAffinity: ["Más ventas", "Acelerar procesos"], sectorBoost: ["Agencia", "Ecommerce", "SaaS"], needs24h: false, setupTime: { es: "1 semana", en: "1 week" }, impact: { es: "Medio", en: "Medium" } },
+  { id: "live-dashboard", taskAffinity: ["Informes", "Entrada datos"], priorityAffinity: ["Acelerar procesos", "Reducir costes"], sectorBoost: ["Ecommerce", "Agencia", "SaaS", "Logística"], needs24h: false, setupTime: { es: "1–2 semanas", en: "1–2 weeks" }, impact: { es: "Medio", en: "Medium" } },
+  { id: "smart-scheduling", taskAffinity: ["Agenda", "Leads"], priorityAffinity: ["Acelerar procesos", "Más ventas"], sectorBoost: ["Servicios", "Salud", "Inmobiliaria", "Agencia"], needs24h: false, setupTime: { es: "3–5 días", en: "3–5 days" }, impact: { es: "Medio", en: "Medium" } },
+  { id: "auto-billing", taskAffinity: ["Facturación", "Informes", "Entrada datos"], priorityAffinity: ["Reducir costes", "Acelerar procesos"], sectorBoost: ["Servicios", "Agencia", "Ecommerce", "Logística"], needs24h: false, setupTime: { es: "2–3 semanas", en: "2–3 weeks" }, impact: { es: "Alto", en: "High" } },
+  { id: "smart-email", taskAffinity: ["Emails", "Leads", "Contenido"], priorityAffinity: ["Más ventas", "Reducir costes"], sectorBoost: ["Ecommerce", "Servicios", "Inmobiliaria", "Salud"], needs24h: false, setupTime: { es: "1–2 semanas", en: "1–2 weeks" }, impact: { es: "Medio–Alto", en: "Medium–High" } },
+  { id: "support-triage", taskAffinity: ["Atención cliente", "Emails", "Informes"], priorityAffinity: ["Mejor soporte", "Reducir costes"], sectorBoost: ["Salud", "Logística", "Servicios", "Ecommerce"], needs24h: true, setupTime: { es: "1–2 semanas", en: "1–2 weeks" }, impact: { es: "Alto", en: "High" } },
 ];
 
 function selectTopIdeas(ctx: IdeaCtx): TechIdea[] {
   const scored = TECH_IDEAS.map((idea) => {
     let score = 0;
-    const taskMatches = idea.taskAffinity.filter((t) => ctx.tasks.includes(t)).length;
+    const taskMatches = idea.taskAffinity.filter((tk) => ctx.tasks.includes(tk)).length;
     score += taskMatches * 25;
     if (idea.priorityAffinity.includes(ctx.priority)) score += 20;
     if (idea.sectorBoost.includes(ctx.sector)) score += 15;
@@ -81,41 +382,24 @@ function selectTopIdeas(ctx: IdeaCtx): TechIdea[] {
 }
 
 export interface ReportEmailParams {
-  name: string;
-  email: string;
-  sector: string;
-  teamSize: string;
-  revenue: string;
-  usesAI: boolean | null;
-  tasks: string[];
-  hours: number;
-  costH: number;
-  leads: number;
-  respTime: number;
-  avgTicket: number;
-  h24: boolean | null;
+  name: string; email: string; sector: string; teamSize: string; revenue: string;
+  usesAI: boolean | null; tasks: string[]; hours: number; costH: number;
+  leads: number; respTime: number; avgTicket: number; h24: boolean | null;
   priority: string;
-  calc: {
-    hrsSaved: number;
-    monthlySav: number;
-    addRev: number;
-    newResp: number;
-    respImprove: number;
-    score: number;
-    total: number;
-    annual: number;
-    avgTicket: number;
-  };
+  calc: { hrsSaved: number; monthlySav: number; addRev: number; newResp: number; respImprove: number; score: number; total: number; annual: number; avgTicket: number; };
 }
 
 export function buildReportEmailHtml(
   params: ReportEmailParams,
-  helpers: { fmt: (n: number) => string; esc: (v: unknown) => string; calendlyUrl: () => string }
+  helpers: { fmt: (n: number) => string; esc: (v: unknown) => string; calendlyUrl: () => string },
+  lang: Lang = "es"
 ): string {
   const { name, sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc } = params;
   const { fmt, esc, calendlyUrl } = helpers;
+  const T = (key: string, r?: Record<string, string | number>) => t(lang, key, r);
 
-  const today = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  const locale = lang === "en" ? "en-US" : "es-ES";
+  const today = new Date().toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
   const sName = esc(name);
   const sSector = esc(sector);
   const sTeam = esc(teamSize);
@@ -130,28 +414,36 @@ export function buildReportEmailHtml(
   const aiDisc = usesAI ? 0.70 : 1.0;
   const overhead = teamOverhead[teamSize] ?? 1.0;
   const hoursPerTask = tasks.length > 0 ? hours / tasks.length : 0;
-  const taskBreakdown = tasks.map((t) => {
-    const baseSav = TASK_SAVINGS[t]?.savings ?? 0.6;
+  const taskBreakdown = tasks.map((tk) => {
+    const baseSav = TASK_SAVINGS[tk] ?? 0.6;
     const adjusted = Math.min(baseSav * eff * aiDisc, 0.95);
     const hSaved = Math.round(hoursPerTask * 4.33 * adjusted);
     const eurSaved = Math.round(hSaved * costH * overhead);
-    return { label: t, savings: adjusted, hSaved, eurSaved, desc: TASK_SAVINGS[t]?.desc ?? "" };
+    const descKey = TASK_DESC_KEYS[tk];
+    return { label: tk, savings: adjusted, hSaved, eurSaved, desc: descKey ? T(descKey) : "" };
   });
 
-  const firstTaskLabel = taskBreakdown[0]?.label ?? "las tareas más repetitivas";
+  const firstTaskLabel = taskBreakdown[0]?.label ?? T("defaultTasks");
   const firstTaskPct = taskBreakdown[0] != null ? Math.round(taskBreakdown[0].savings * 100) : 60;
   const ticketStr = avgTicket >= 1000 ? Math.round(avgTicket / 1000) + "K" : fmt(avgTicket);
+
   const priorityRec: Record<string, string> = {
-    "Reducir costes": `Con un ahorro potencial de €${fmt(calc.monthlySav)}/mes, recomendamos empezar automatizando ${firstTaskLabel} (${firstTaskPct}% automatizable). En 6 semanas tendrás ROI positivo.`,
-    "Más ventas": `Tu pipeline de ${leads.toLocaleString()} leads/mes con ticket medio de €${ticketStr} tiene un potencial de €${fmt(calc.addRev)} adicionales/mes. ${h24 ? "Con atención 24/7," : "Activando atención 24/7,"} el conversion rate sube significativamente.`,
-    "Mejor soporte": `Reducir tu tiempo de respuesta de ${respTime}min a ${calc.newResp}min (–${calc.respImprove}%) impactará directamente en retención. ${h24 ? "Ya cubrís 24/7, ideal para chatbots AI." : "Recomendamos activar soporte 24/7 con chatbots AI."}`,
-    "Acelerar procesos": `Con ${hours}h/semana en tareas repetitivas y un equipo de ${teamSize}, la automatización liberará ${calc.hrsSaved}h/mes que tu equipo puede dedicar a trabajo de alto valor.`,
+    "Reducir costes": T("recReduceCosts", { savings: fmt(calc.monthlySav), task: firstTaskLabel, pct: firstTaskPct }),
+    "Más ventas": T("recMoreSales", { leads: leads.toLocaleString(locale), ticket: ticketStr, rev: fmt(calc.addRev), h24Note: h24 ? T("recMoreSalesH24Yes") : T("recMoreSalesH24No") }),
+    "Mejor soporte": T("recBetterSupport", { from: respTime, to: calc.newResp, improve: calc.respImprove, h24Note: h24 ? T("recBetterSupportH24Yes") : T("recBetterSupportH24No") }),
+    "Acelerar procesos": T("recAccelerate", { hours, team: teamSize, saved: calc.hrsSaved }),
   };
   const priorityRecText = esc(priorityRec[priority] ?? priorityRec["Reducir costes"]);
 
   const sectorAdoption = SECTOR_AI_ADOPTION[sector] ?? 40;
   const sectorAvgResp = SECTOR_AVG_RESPONSE[sector] ?? 40;
-  const scoreLevel = calc.score >= 75 ? { label: "Muy alto", insight: "Tu negocio tiene un potencial de transformación excepcional." } : calc.score >= 55 ? { label: "Alto", insight: "Estás en una posición excelente para obtener ROI rápido con automatización AI." } : calc.score >= 35 ? { label: "Moderado", insight: "Hay oportunidades claras de mejora. Empieza con las tareas de mayor impacto." } : { label: "Inicial", insight: "Empezar con AI ahora te dará ventaja competitiva." };
+  const scoreLevel = calc.score >= 75
+    ? { label: T("scoreVeryHigh"), insight: T("scoreVeryHighInsight") }
+    : calc.score >= 55
+    ? { label: T("scoreHigh"), insight: T("scoreHighInsight") }
+    : calc.score >= 35
+    ? { label: T("scoreModerate"), insight: T("scoreModerateInsight") }
+    : { label: T("scoreInitial"), insight: T("scoreInitialInsight") };
 
   const revValue = revenue === "< 100 K €" ? 80000 : revenue === "100 K – 500 K €" ? 300000 : revenue === "500 K – 2 M €" ? 1200000 : revenue === "2 M – 10 M €" ? 5000000 : 15000000;
   const annualImpactPct = ((calc.annual / revValue) * 100).toFixed(1);
@@ -161,41 +453,52 @@ export function buildReportEmailHtml(
 
   const sectorEffPct = Math.round((sectorEff[sector] ?? 1) * 100);
   const overheadPct = Math.round(((teamOverhead[teamSize] ?? 1) - 1) * 100);
-  const factorsText = esc(`Factores: eficiencia AI en ${sector} (${sectorEffPct}%), ${usesAI ? "descuento por IA existente (–30%)" : "sin IA previa (100% potencial)"}, overhead coordinación equipo ${teamSize} (${overheadPct}% extra).`);
+  const factorsText = esc(`${T("factors")}: ${T("aiEfficiency")} ${sector} (${sectorEffPct}%), ${usesAI ? T("aiDiscountExisting") : T("aiFullPotential")}, ${T("coordOverhead")} ${teamSize} (${overheadPct}% ${T("extra")}).`);
 
-  const tasksList = taskBreakdown.map((t) => `<tr><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;"><strong>${esc(t.label)}</strong><br><span style="font-size:12px;color:#0B0B0B99;">${esc(t.desc)} · ${Math.round(t.savings * 100)}% automatizable</span></td><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${t.hSaved}h · €${fmt(t.eurSaved)}</td></tr>`).join("");
+  const tasksList = taskBreakdown.map((tk) => `<tr><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;"><strong>${esc(tk.label)}</strong><br><span style="font-size:12px;color:#0B0B0B99;">${esc(tk.desc)} · ${Math.round(tk.savings * 100)}% ${T("automatable")}</span></td><td style="padding:12px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${tk.hSaved}h · €${fmt(tk.eurSaved)}</td></tr>`).join("");
 
   const ideasHtml = topIdeas.map((idea, i) => {
-    const desc = idea.getDesc(recCtx);
+    const ik = IDEA_KEYS[idea.id];
+    let desc = T(ik.desc);
+    if (idea.id === "auto-workflows") {
+      const relevant = recCtx.tasks.filter(tk => TASK_MAP_KEYS[tk]).slice(0, 2).map(tk => T(TASK_MAP_KEYS[tk]));
+      desc = relevant.length > 0
+        ? T("ideaAutoWorkflowsDesc", { tasks: relevant.join(` ${T("and")} `) })
+        : T("ideaAutoWorkflowsDesc", { tasks: T("ideaAutoWorkflowsFallback") });
+    }
     return `<div style="margin-bottom:16px;padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;">
-        <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0B0B0B;">${esc(idea.title)} <span style="font-size:11px;color:#0B0B0B33;">#${i + 1}</span></p>
+        <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0B0B0B;">${esc(T(ik.title))} <span style="font-size:11px;color:#0B0B0B33;">#${i + 1}</span></p>
         <p style="margin:0 0 10px;font-size:12px;color:#0B0B0B99;line-height:1.5;">${esc(desc)}</p>
-        <span style="display:inline-block;margin-right:8px;padding:4px 10px;border-radius:999px;background:#f5f5f5;font-size:11px;color:#0B0B0B99;">⏱ ${idea.setupTime}</span>
-        <span style="display:inline-block;padding:4px 10px;border-radius:999px;background:#f5f5f5;font-size:11px;color:#0B0B0B99;">Impacto ${idea.impact.toLowerCase()}</span>
+        <span style="display:inline-block;margin-right:8px;padding:4px 10px;border-radius:999px;background:#f5f5f5;font-size:11px;color:#0B0B0B99;">⏱ ${idea.setupTime[lang]}</span>
+        <span style="display:inline-block;padding:4px 10px;border-radius:999px;background:#f5f5f5;font-size:11px;color:#0B0B0B99;">${T("impact")} ${idea.impact[lang].toLowerCase()}</span>
       </div>`;
   }).join("");
 
-  const timelineTaskNames = taskBreakdown.length >= 2 ? taskBreakdown.slice(0, 2).map(t => t.label).join(" y ") : taskBreakdown[0]?.label ?? "procesos clave";
+  const timelineTaskNames = taskBreakdown.length >= 2 ? taskBreakdown.slice(0, 2).map(tk => tk.label).join(` ${T("and")} `) : taskBreakdown[0]?.label ?? "";
   const timelinePhases = [
-    { week: "Sem 1–2", title: "Auditoría y setup", desc: `Análisis profundo de tus ${tasks.length} procesos clave y diseño de la arquitectura AI.` },
-    { week: "Sem 3–4", title: "Implementación", desc: `Despliegue de automatizaciones para ${timelineTaskNames}${taskBreakdown.length > 2 ? ` (+${taskBreakdown.length - 2} más)` : ""}.` },
-    { week: "Sem 5–6", title: "Optimización y ROI", desc: `Fine-tuning y medición. Objetivo: ${calc.hrsSaved}h liberadas y €${fmt(calc.total)} de impacto/mes.` },
+    { week: T("tw12"), title: T("tw12Title"), desc: T("tw12Desc", { count: tasks.length }) },
+    { week: T("tw34"), title: T("tw34Title"), desc: T("tw34Desc", { tasks: timelineTaskNames, extra: taskBreakdown.length > 2 ? T("tw34Extra", { count: taskBreakdown.length - 2 }) : "" }) },
+    { week: T("tw56"), title: T("tw56Title"), desc: T("tw56Desc", { hours: calc.hrsSaved, total: fmt(calc.total) }) },
   ];
 
+  const benchmarkText = usesAI
+    ? T("adoptionYes", { pct: sectorAdoption })
+    : T("adoptionNo", { pct: sectorAdoption, sector });
+  const respCompare = respTime > sectorAvgResp
+    ? T("aboveAvg", { diff: respTime - sectorAvgResp, newResp: calc.newResp })
+    : T("belowAvg", { diff: sectorAvgResp - respTime });
+
   const profileRows = [
-    { label: "Sector", value: sSector },
-    { label: "Equipo", value: `${sTeam} personas` },
-    { label: "Facturación", value: sRevenue },
-    { label: "Ticket medio", value: `€${avgTicket >= 1000 ? Math.round(avgTicket / 1000) + "K" : fmt(avgTicket)}` },
-    { label: "Usa AI", value: usesAI ? "Sí, actualmente" : "Aún no" },
-    { label: "Soporte 24/7", value: h24 ? "Sí, necesario" : "Horario estándar" },
-    { label: "Prioridad", value: sPriority },
+    { label: T("sector"), value: sSector },
+    { label: T("team"), value: `${sTeam} ${T("people")}` },
+    { label: T("billing"), value: sRevenue },
+    { label: T("avgTicket"), value: `€${avgTicket >= 1000 ? Math.round(avgTicket / 1000) + "K" : fmt(avgTicket)}` },
+    { label: T("usesAI"), value: usesAI ? T("aiYes") : T("aiNo") },
+    { label: T("support247"), value: h24 ? T("supportYes") : T("supportNo") },
+    { label: T("priority"), value: sPriority },
   ].map((r) => `<div style="padding:12px;border-radius:8px;background:#FAFAFA;margin-bottom:8px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${r.label}</p><p style="margin:0;font-size:13px;font-weight:500;color:#0B0B0B;">${r.value}</p></div>`).join("");
 
-  const benchmarkText = usesAI ? `Ya formas parte del ${sectorAdoption}% que usa AI. El siguiente paso es escalar.` : `El ${sectorAdoption}% de empresas en ${sector} ya usa AI. Es momento de actuar.`;
-  const respCompare = respTime > sectorAvgResp ? `Estás ${respTime - sectorAvgResp}min por encima. Con AI llegarás a ${calc.newResp}min.` : `Estás ${sectorAvgResp - respTime}min por debajo de la media. Con AI serás referente.`;
-
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif;">
 <div style="max-width:640px;margin:0 auto;padding:24px 20px;">
   <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 12px 60px rgba(11,11,11,0.08);border:1px solid #E8E8E8;">
@@ -205,86 +508,86 @@ export function buildReportEmailHtml(
     </div>
     <div style="padding:28px 28px 32px;">
       <div style="text-align:center;margin-bottom:28px;">
-        <p style="margin:0 0 8px;font-size:10px;color:#0B0B0B66;letter-spacing:0.2em;">INFORME DE POTENCIAL AI</p>
-        <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0B0B0B;">Informe de Potencial AI</h1>
-        <p style="margin:0;font-size:14px;color:#0B0B0B99;">Preparado para <strong>${sName || "tu negocio"}</strong> · ${today}</p>
+        <p style="margin:0 0 8px;font-size:10px;color:#0B0B0B66;letter-spacing:0.2em;">${T("reportHeader")}</p>
+        <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0B0B0B;">${T("reportTitle")}</h1>
+        <p style="margin:0;font-size:14px;color:#0B0B0B99;">${T("preparedFor")} <strong>${sName || T("yourBusiness")}</strong> · ${today}</p>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">PERFIL DE EMPRESA</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("profileSection")}</p></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">${profileRows}</div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">AI SCORE</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("aiScoreSection")}</p></div>
       <div style="text-align:center;padding:20px 0;">
         <p style="margin:0 0 8px;font-size:48px;font-weight:700;color:#0B0B0B;">${esc(calc.score)}</p>
-        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0B0B0B;">Potencial ${scoreLevel.label}</p>
+        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0B0B0B;">${T("potential")} ${scoreLevel.label}</p>
         <p style="margin:0;font-size:12px;color:#0B0B0B99;line-height:1.55;max-width:360px;margin:0 auto;">${esc(scoreLevel.insight)}</p>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">IMPACTO FINANCIERO</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("financialSection")}</p></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-        <div style="text-align:center;padding:20px;background:#FAFAFA;border-radius:12px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">Ahorro operativo / mes</p><p style="margin:0;font-size:22px;font-weight:700;color:#0B0B0B;">€${calc.monthlySav >= 1000 ? Math.round(calc.monthlySav / 1000) + "K" : fmt(calc.monthlySav)}</p></div>
-        <div style="text-align:center;padding:20px;background:#FAFAFA;border-radius:12px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">Ingreso adicional / mes</p><p style="margin:0;font-size:22px;font-weight:700;color:#0B0B0B;">€${calc.addRev >= 1000 ? Math.round(calc.addRev / 1000) + "K" : fmt(calc.addRev)}</p></div>
+        <div style="text-align:center;padding:20px;background:#FAFAFA;border-radius:12px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${T("opSavingsMonth")}</p><p style="margin:0;font-size:22px;font-weight:700;color:#0B0B0B;">€${calc.monthlySav >= 1000 ? Math.round(calc.monthlySav / 1000) + "K" : fmt(calc.monthlySav)}</p></div>
+        <div style="text-align:center;padding:20px;background:#FAFAFA;border-radius:12px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${T("addRevMonth")}</p><p style="margin:0;font-size:22px;font-weight:700;color:#0B0B0B;">€${calc.addRev >= 1000 ? Math.round(calc.addRev / 1000) + "K" : fmt(calc.addRev)}</p></div>
       </div>
       <div style="padding:20px;border:1px solid #f0f0f0;border-radius:12px;background:#FAFAFA;margin-bottom:20px;">
-        <p style="margin:0 0 12px;font-size:10px;color:#0B0B0B66;letter-spacing:0.12em;">DESGLOSE DEL CÁLCULO</p>
-        <p style="margin:0 0 8px;font-size:12px;color:#0B0B0B99;">${calc.hrsSaved}h liberadas × ${costH}€/h × overhead equipo <strong style="float:right;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</strong></p>
-        <p style="margin:0 0 8px;font-size:12px;color:#0B0B0B99;">${fmt(leads)} leads × conv. boost × €${ticketStr} ticket <strong style="float:right;color:#0B0B0B;">€ ${fmt(calc.addRev)}</strong></p>
+        <p style="margin:0 0 12px;font-size:10px;color:#0B0B0B66;letter-spacing:0.12em;">${T("breakdownSection")}</p>
+        <p style="margin:0 0 8px;font-size:12px;color:#0B0B0B99;">${calc.hrsSaved}${T("hoursFreed")} × ${costH}€/h × ${T("teamOverhead")} <strong style="float:right;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</strong></p>
+        <p style="margin:0 0 8px;font-size:12px;color:#0B0B0B99;">${fmt(leads)} ${T("leadsConv")} × €${ticketStr} ${T("ticket")} <strong style="float:right;color:#0B0B0B;">€ ${fmt(calc.addRev)}</strong></p>
         <hr style="border:none;border-top:1px solid #E8E8E8;margin:12px 0;">
-        <p style="margin:0;font-size:13px;font-weight:600;">Impacto total mensual <strong style="float:right;font-size:14px;">€ ${fmt(calc.total)}</strong></p>
+        <p style="margin:0;font-size:13px;font-weight:600;">${T("totalMonthly")} <strong style="float:right;font-size:14px;">€ ${fmt(calc.total)}</strong></p>
         <p style="margin:12px 0 0;font-size:10px;color:#0B0B0B66;line-height:1.5;">${factorsText}</p>
       </div>
       <div style="padding:24px;background:#0B0B0B;border-radius:12px;text-align:center;margin-bottom:28px;">
-        <p style="margin:0 0 4px;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.15em;">IMPACTO TOTAL ESTIMADO</p>
-        <p style="margin:0;font-size:28px;font-weight:700;color:#fff;">€ ${fmt(calc.total)} <span style="font-size:14px;color:rgba(255,255,255,0.5)">/mes</span></p>
-        <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.4);">≈ € ${fmt(calc.annual)}/año · ${annualImpactPct}% de tu facturación</p>
+        <p style="margin:0 0 4px;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.15em;">${T("totalEstimated")}</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#fff;">€ ${fmt(calc.total)} <span style="font-size:14px;color:rgba(255,255,255,0.5)">${T("perMonth")}</span></p>
+        <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.4);">≈ € ${fmt(calc.annual)}${T("perYear")} · ${annualImpactPct}% ${T("ofRevenue")}</p>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">MÉTRICAS OPERATIVAS</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("metricsSection")}</p></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
-        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">Horas liberadas</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">${calc.hrsSaved}h / mes</p><p style="margin:0;font-size:11px;color:#0B0B0B99;line-height:1.5;">De ${hours}h/sem repetitivas, tu equipo recuperará ${calc.hrsSaved}h mensuales.</p></div>
-        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">Coste/hora ahorrado</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">${calc.hrsSaved}h × ${costH}€/h = ahorro mensual.</p></div>
-        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">Tiempo de respuesta</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">${sResp} → ${sNewResp} min</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">Mejora del ${calc.respImprove}%. La media en ${sSector} es ${sectorAvgResp}min.</p></div>
-        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">Revenue adicional</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">€ ${fmt(calc.addRev)}/mes</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">Sobre ${leads.toLocaleString()} leads con ticket €${ticketStr}.</p></div>
+        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">${T("hoursFreedLabel")}</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">${calc.hrsSaved}h ${T("hoursPerMonth")}</p><p style="margin:0;font-size:11px;color:#0B0B0B99;line-height:1.5;">${T("fromWeekly")} ${hours}${T("weeklyRepetitive")} ${calc.hrsSaved}${T("monthlyHours")}</p></div>
+        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">${T("costSaved")}</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">€ ${fmt(calc.monthlySav)}</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">${calc.hrsSaved}h × ${costH}€/h ${T("costCalc")}</p></div>
+        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">${T("responseTime")}</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">${sResp} → ${sNewResp} min</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">${T("improvement")} ${calc.respImprove}%. ${T("sectorAvg")} ${sSector} ${T("is")} ${sectorAvgResp}min.</p></div>
+        <div style="padding:16px;border:1px solid #f0f0f0;border-radius:12px;background:#fff;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B99;">${T("additionalRev")}</p><p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0B0B0B;">€ ${fmt(calc.addRev)}${T("perMonth")}</p><p style="margin:0;font-size:11px;color:#0B0B0B99;">${T("onLeads")} ${leads.toLocaleString(locale)} ${T("leadsWithTicket")} €${ticketStr}.</p></div>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">BENCHMARK SECTORIAL</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("benchmarkSection")}</p></div>
       <div style="padding:20px;border:1px solid #f0f0f0;border-radius:12px;background:#FAFAFA;margin-bottom:28px;">
         <p style="margin:0 0 8px;font-size:12px;color:#0B0B0B99;">${sSector}</p>
-        <p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">Adopción AI en el sector</p>
-        <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0B0B0B;">${sectorAdoption}% de empresas</p>
+        <p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${T("aiAdoption")}</p>
+        <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0B0B0B;">${sectorAdoption}% ${T("ofCompanies")}</p>
         <p style="margin:0 0 16px;font-size:12px;color:#0B0B0B99;line-height:1.5;">${esc(benchmarkText)}</p>
-        <p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">Resp. media del sector</p>
+        <p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${T("sectorResponse")}</p>
         <p style="margin:0;font-size:20px;font-weight:700;color:#0B0B0B;">${sectorAvgResp} min</p>
         <p style="margin:4px 0 0;font-size:12px;color:#0B0B0B99;">${esc(respCompare)}</p>
       </div>
 
-      ${tasks.length > 0 ? `<div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">AUTOMATIZACIÓN POR TAREA</p></div>
+      ${tasks.length > 0 ? `<div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("taskSection")}</p></div>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px;">${tasksList}</table>` : ""}
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">RECOMENDACIÓN PERSONALIZADA</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("recSection")}</p></div>
       <div style="padding:20px;border:2px solid rgba(11,11,11,0.08);border-radius:12px;background:#FAFAFA;margin-bottom:28px;">
-        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#0B0B0B;">Basado en tu prioridad: ${sPriority}</p>
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#0B0B0B;">${T("basedOnPriority")} ${sPriority}</p>
         <p style="margin:0;font-size:12px;color:#0B0B0B99;line-height:1.65;">${priorityRecText}</p>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">QUICK WINS — SOLUCIONES INMEDIATAS</p></div>
-      <p style="margin:-8px 0 16px;font-size:12px;color:#0B0B0B99;">3 ideas seleccionadas para tu perfil (${sSector} · ${sTeam} · ${sPriority.toLowerCase()}).</p>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:24px 0;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("quickWinsSection")}</p></div>
+      <p style="margin:-8px 0 16px;font-size:12px;color:#0B0B0B99;">${T("quickWinsSub")} (${sSector} · ${sTeam} · ${sPriority.toLowerCase()}).</p>
       ${ideasHtml}
       <div style="margin-top:20px;padding:20px;background:#0B0B0B;color:#fff;border-radius:12px;">
-        <p style="margin:0 0 8px;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.12em;">STACK COMBINADO — IMPACTO ESTIMADO</p>
-        <p style="margin:0;font-size:13px;line-height:1.5;">Poniendo en marcha las 3 ideas, tu equipo de ${sTeam} puede alcanzar <strong>€${fmt(calc.monthlySav)}/mes</strong> ahorro y <strong>€${fmt(calc.addRev)}/mes</strong> adicionales en 4–6 semanas.</p>
+        <p style="margin:0 0 8px;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.12em;">${T("stackSection")}</p>
+        <p style="margin:0;font-size:13px;line-height:1.5;">${T("stackDesc", { team: sTeam, savings: fmt(calc.monthlySav), rev: fmt(calc.addRev) })}</p>
       </div>
 
-      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:28px 0 12px;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">TIMELINE SUGERIDO</p></div>
+      <div style="border-top:1px solid #EBEBEB;border-bottom:1px solid #EBEBEB;margin:28px 0 12px;padding:12px 0;"><p style="margin:0;font-size:10px;color:#0B0B0B66;letter-spacing:0.18em;">${T("timelineSection")}</p></div>
       ${timelinePhases.map((p) => `<div style="margin-bottom:16px;"><p style="margin:0 0 4px;font-size:11px;color:#0B0B0B66;">${p.week}</p><p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0B0B0B;">${p.title}</p><p style="margin:0;font-size:12px;color:#0B0B0B99;line-height:1.5;">${esc(p.desc)}</p></div>`).join("")}
 
       <div style="text-align:center;margin-top:32px;padding-top:24px;">
-        <a href="${calendlyUrl()}" style="display:inline-block;padding:14px 28px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:500;">Reservar sesión estratégica gratuita →</a>
-        <p style="margin:12px 0 0;font-size:11px;color:#0B0B0B66;">Sesión de 30 min · Sin compromiso</p>
+        <a href="${calendlyUrl()}" style="display:inline-block;padding:14px 28px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:500;">${T("ctaBtn")}</a>
+        <p style="margin:12px 0 0;font-size:11px;color:#0B0B0B66;">${T("ctaSub")}</p>
       </div>
 
       <div style="margin-top:28px;padding-top:20px;border-top:1px solid #f0f0f0;text-align:center;">
-        <p style="margin:0;font-size:10px;color:#0B0B0B44;line-height:1.6;">The AI Business<br>* Estimaciones basadas en benchmarks del sector. Los resultados pueden variar.</p>
+        <p style="margin:0;font-size:10px;color:#0B0B0B44;line-height:1.6;">The AI Business<br>${T("footer")}</p>
       </div>
     </div>
   </div>

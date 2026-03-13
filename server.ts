@@ -86,7 +86,7 @@ const setupSG = () => { const k = process.env.SENDGRID_API_KEY; if (k) sgMail.se
 const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "info@theaibusiness.com", name: process.env.SENDGRID_FROM_NAME || "The AI Business" });
 const notify = () => process.env.NOTIFY_EMAIL || from().email;
 const calendlyUrl = () => process.env.CALENDLY_URL || "https://theaibusiness.com/#contacto";
-const fmt = (n: number) => n.toLocaleString("es-ES");
+const fmtLocale = (n: number, lang: string) => n.toLocaleString(lang === "en" ? "en-US" : "es-ES");
 const esc = (v: unknown): string => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // ═══════════════════════════════════
@@ -95,7 +95,9 @@ const esc = (v: unknown): string => String(v ?? "").replace(/&/g, "&amp;").repla
 app.post("/api/send-report", rateLimit, async (req, res) => {
   if (!setupSG()) return res.status(500).json({ error: "SendGrid not configured" });
   try {
-    const { name, email, sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc } = req.body;
+    const { name, email, sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc, lang: rawLang } = req.body;
+    const lang = rawLang === "en" ? "en" as const : "es" as const;
+    const fmt = (n: number) => fmtLocale(n, lang);
     const emailStr = typeof email === "string" ? email.trim() : "";
     if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) return res.status(400).json({ error: "Email válido requerido" });
     if (!calc || typeof calc.total !== "number") return res.status(400).json({ error: "Datos del informe inválidos" });
@@ -127,7 +129,8 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     try {
       reportHtml = buildReportEmailHtml(
         { name, email: emailTo, sector, teamSize, revenue, usesAI, tasks: Array.isArray(tasks) ? tasks : [], hours: Number(hours) || 0, costH: Number(costH) || 0, leads: Number(leads) || 0, respTime: Number(respTime) || 0, avgTicket: Number(avgTicket) || 0, h24: h24 ?? null, priority: priority || "", calc: safeCalc },
-        { fmt, esc, calendlyUrl }
+        { fmt, esc, calendlyUrl },
+        lang
       );
     } catch (templateErr: unknown) {
       console.error("buildReportEmailHtml error:", templateErr);
@@ -136,9 +139,12 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
     }
 
     // Email al lead
+    const subjectText = lang === "en"
+      ? `${sName ? sName + ", your" : "Your"} AI report — € ${fmt(safeCalc.total)}/mo`
+      : `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(safeCalc.total)}/mes`;
     await sgMail.send({
       to: emailTo, from: from(),
-      subject: `${sName ? sName + ", tu" : "Tu"} informe AI — € ${fmt(safeCalc.total)}/mes`,
+      subject: subjectText,
       html: reportHtml,
     });
 
