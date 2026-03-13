@@ -546,9 +546,26 @@ export function Calculator({ id }: CalculatorProps) {
       const fallbackName = i18n.language.startsWith("en") ? "company" : "empresa";
       const prefix = i18n.language.startsWith("en") ? "ai-report" : "informe-ai";
       const safeName = (name || fallbackName).toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      pdf.save(`${prefix}-${safeName}.pdf`);
+      const filename = `${prefix}-${safeName}.pdf`;
+
+      try {
+        pdf.save(filename);
+      } catch {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     } catch (e) {
       console.error("PDF generation error:", e);
+      alert(i18n.language.startsWith("en")
+        ? "There was an error generating the PDF. Please try again."
+        : "Hubo un error al generar el PDF. Por favor, inténtalo de nuevo.");
     } finally {
       setDownloading(false);
     }
