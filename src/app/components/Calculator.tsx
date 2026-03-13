@@ -816,9 +816,17 @@ export function Calculator({ id }: CalculatorProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      sent = res.ok;
-    } catch { /* fallback: user can still download PDF */ }
-    finally { setSubmitting(false); }
+      if (res.ok) {
+        sent = true;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        console.error("API error:", res.status, data);
+      }
+    } catch (fetchErr) {
+      console.error("Network error on /api/send-report:", fetchErr);
+    } finally {
+      setSubmitting(false);
+    }
 
     setEmailReportSent(sent);
     setDone(true);
