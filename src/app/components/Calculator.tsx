@@ -17,6 +17,7 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { API_BASE, CALENDLY_URL } from "../lib/constants";
 
 /* ─── Data ─── */
 const SECTORS = ["Ecommerce", "Servicios", "Inmobiliaria", "Salud", "Logística", "Agencia", "SaaS", "Otros"];
@@ -377,7 +378,9 @@ export function Calculator({ id }: CalculatorProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
+  const [emailReportSent, setEmailReportSent] = useState(false);
 
   /* PDF download */
   const reportRef = useRef<HTMLDivElement>(null);
@@ -771,16 +774,38 @@ export function Calculator({ id }: CalculatorProps) {
     if (step === 9) return !!priority;
     return true;
   };
-  const submit = () => {
+  const submit = async () => {
     setErr("");
     if (!email || !email.includes("@") || !email.includes(".")) { setErr(t("calc.invalidEmail")); return; }
+
+    const payload = {
+      name, email, sector, teamSize, revenue, usesAI,
+      tasks, hours, costH, leads, respTime, avgTicket, h24, priority, calc,
+      createdAt: new Date().toISOString(),
+    };
+
+    try { localStorage.setItem("ai-business:lead", JSON.stringify(payload)); } catch {}
+
+    let sent = false;
+    try {
+      setSubmitting(true);
+      const res = await fetch(`${API_BASE}/api/send-report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      sent = res.ok;
+    } catch { /* fallback: user can still download PDF */ }
+    finally { setSubmitting(false); }
+
+    setEmailReportSent(sent);
     setDone(true);
   };
   const reset = () => {
     setStep(1); setDir(-1); setSector(""); setTeamSize(""); setRevenue("");
     setUsesAI(null); setTasks([]); setHours(20); setCostH(25); setLeads(500);
     setRespTime(30); setAvgTicket(200); setH24(null); setPriority(""); setName(""); setEmail("");
-    setDone(false); setErr("");
+    setDone(false); setErr(""); setEmailReportSent(false);
   };
 
   const locale = i18n.language.startsWith("en") ? "en-US" : "es-ES";
@@ -1067,15 +1092,16 @@ export function Calculator({ id }: CalculatorProps) {
                   </motion.div>
                   <motion.button
                     onClick={submit}
+                    disabled={submitting}
                     initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
                     animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                     transition={{ duration: 0.5, delay: 0.46 }}
-                    whileHover={{ scale: 1.02, boxShadow: "0 8px 35px rgba(11,11,11,0.15)" }}
-                    whileTap={{ scale: 0.97 }}
-                    className="w-full py-4 mt-4 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)]"
+                    whileHover={!submitting ? { scale: 1.02, boxShadow: "0 8px 35px rgba(11,11,11,0.15)" } : {}}
+                    whileTap={!submitting ? { scale: 0.97 } : {}}
+                    className={`w-full py-4 mt-4 rounded-full shadow-[0_4px_20px_rgba(11,11,11,0.08)] ${submitting ? "bg-[#0B0B0B]/50 text-white/60 cursor-wait" : "bg-[#0B0B0B] text-white cursor-pointer"}`}
                     style={{ fontSize: "1.05rem", fontWeight: 500 }}
                   >
-                    {t("calc.unlockBtn")}
+                    {submitting ? t("calc.sending") : t("calc.unlockBtn")}
                   </motion.button>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -1115,21 +1141,36 @@ export function Calculator({ id }: CalculatorProps) {
                   initial={{ opacity: 0, filter: "blur(8px)" }}
                   animate={{ opacity: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.4, delay: 0.4 }}
-                  className="text-[#0B0B0B]/40 mb-8" style={{ fontSize: "0.95rem" }}
+                  className={`text-[#0B0B0B]/40 ${emailReportSent ? "mb-8" : "mb-2"}`} style={{ fontSize: "0.95rem" }}
                 >
-                  {t("calc.reportSentTo")} <span className="text-[#0B0B0B]" style={{ fontWeight: 500 }}>{email}</span>
+                  {emailReportSent
+                    ? <>{t("calc.reportSentTo")} <span className="text-[#0B0B0B]" style={{ fontWeight: 500 }}>{email}</span></>
+                    : <>{t("calc.reportReadyPdf")}</>}
                 </motion.p>
+                {!emailReportSent && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.45 }}
+                    className="text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 mb-6"
+                    style={{ fontSize: "0.82rem" }}
+                  >{t("calc.submitError")}</motion.p>
+                )}
                 <motion.div
                   initial={{ opacity: 0, filter: "blur(10px)", y: 10 }}
                   animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                   className="flex flex-wrap gap-3 mb-10"
                 >
-                  <motion.button whileHover={{ scale: 1.03, boxShadow: "0 8px 30px rgba(11,11,11,0.12)" }} whileTap={{ scale: 0.97 }}
-                    className="px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)]"
+                  <motion.a
+                    href={CALENDLY_URL || "#contacto"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.03, boxShadow: "0 8px 30px rgba(11,11,11,0.12)" }} whileTap={{ scale: 0.97 }}
+                    className="px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)] no-underline"
                     style={{ fontSize: "0.95rem", fontWeight: 500 }}>
                     {t("calc.bookCall")}
-                  </motion.button>
+                  </motion.a>
                   <motion.button
                     onClick={downloadPDF}
                     disabled={downloading}
