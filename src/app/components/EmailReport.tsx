@@ -27,6 +27,7 @@ import {
 
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CALENDLY_URL } from "../lib/constants";
 
 /* ─── Task savings data ─── */
 const TASK_SAVINGS: Record<string, { savings: number; desc: string }> = {
@@ -475,7 +476,7 @@ export function EmailReport({ name, email, sector, teamSize, revenue, usesAI, ta
 
           {/* CTA */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 5.0 }} className="text-center pt-4 pb-2">
-            <div className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full" style={{ fontSize: "0.9rem", fontWeight: 500, boxShadow: "0 6px 30px rgba(11,11,11,0.12)" }}><Calendar size={15}/>{t("report.ctaBtn")}<ArrowUpRight size={14} className="text-white/50"/></div>
+            <a href={CALENDLY_URL || "/#contacto"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full no-underline cursor-pointer hover:opacity-90 transition-opacity" style={{ fontSize: "0.9rem", fontWeight: 500, boxShadow: "0 6px 30px rgba(11,11,11,0.12)" }}><Calendar size={15}/>{t("report.ctaBtn")}<ArrowUpRight size={14} className="text-white/50"/></a>
             <p className="text-[#0B0B0B]/20 mt-4" style={{ fontSize: "0.58rem", lineHeight: 1.6 }}>{t("report.ctaSub")}</p>
           </motion.div>
 
