@@ -13,7 +13,7 @@ import {
   Download,
 } from "lucide-react";
 import { EmailReport } from "./EmailReport";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -391,148 +391,26 @@ export function Calculator({ id }: CalculatorProps) {
     setDownloading(true);
     try {
       const el = reportRef.current;
+      el.scrollIntoView({ behavior: "instant", block: "start" });
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 300)));
 
-      /* ── Helper: resolve oklch() → rgb() via the browser engine ── */
-      const probeDiv = document.createElement("div");
-      probeDiv.style.display = "none";
-      document.body.appendChild(probeDiv);
-      const resolveOklch = (raw: string): string => {
-        if (!raw || !raw.includes("oklch")) return raw;
-        return raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (match) => {
-          probeDiv.style.color = match;
-          const rgb = getComputedStyle(probeDiv).color;
-          return rgb || "transparent";
-        });
-      };
-
-      /* ── 1. Collect ALL oklch CSS custom properties from every stylesheet
-              and build a single override <style> tag (nuclear approach) ── */
-      const varOverrides: string[] = [];
-      const processRulesForVars = (ruleList: CSSRuleList) => {
-        for (let j = 0; j < ruleList.length; j++) {
-          const rule = ruleList[j];
-          if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
-            processRulesForVars((rule as CSSGroupingRule).cssRules);
-            continue;
-          }
-          if (!(rule instanceof CSSStyleRule)) continue;
-          for (let k = 0; k < rule.style.length; k++) {
-            const prop = rule.style[k];
-            if (prop.startsWith("--")) {
-              const val = rule.style.getPropertyValue(prop);
-              if (val && val.includes("oklch")) {
-                varOverrides.push(`${prop}:${resolveOklch(val)} !important`);
-              }
-            }
-          }
-        }
-      };
-      for (let i = 0; i < document.styleSheets.length; i++) {
-        try { processRulesForVars(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
-      }
-      const overrideStyle = document.createElement("style");
-      overrideStyle.setAttribute("data-pdf-patch", "1");
-      if (varOverrides.length > 0) {
-        overrideStyle.textContent = `:root,*{${varOverrides.join(";")}}`;
-      }
-      document.head.appendChild(overrideStyle);
-
-      /* ── 2. Patch <style> tag textContent (html2canvas reads raw CSS) ── */
-      const savedStyleTexts: { styleEl: HTMLStyleElement; original: string }[] = [];
-      document.querySelectorAll("style:not([data-pdf-patch])").forEach((styleEl) => {
-        const txt = (styleEl as HTMLStyleElement).textContent || "";
-        if (txt.includes("oklch")) {
-          savedStyleTexts.push({ styleEl: styleEl as HTMLStyleElement, original: txt });
-          (styleEl as HTMLStyleElement).textContent = txt.replace(
-            /oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi,
-            (m) => resolveOklch(m),
-          );
-        }
-      });
-
-      /* ── 3. Patch LIVE CSSOM rules (non-variable properties) ── */
-      const savedRules: { rule: CSSStyleRule; prop: string; original: string; priority: string }[] = [];
-      const patchCSSOM = (ruleList: CSSRuleList) => {
-        for (let j = 0; j < ruleList.length; j++) {
-          const rule = ruleList[j];
-          if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
-            patchCSSOM((rule as CSSGroupingRule).cssRules);
-            continue;
-          }
-          if (!(rule instanceof CSSStyleRule)) continue;
-          for (let k = 0; k < rule.style.length; k++) {
-            const prop = rule.style[k];
-            const val = rule.style.getPropertyValue(prop);
-            if (val && val.includes("oklch")) {
-              const priority = rule.style.getPropertyPriority(prop);
-              savedRules.push({ rule, prop, original: val, priority });
-              rule.style.setProperty(prop, resolveOklch(val), priority);
-            }
-          }
-        }
-      };
-      for (let i = 0; i < document.styleSheets.length; i++) {
-        try { patchCSSOM(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
-      }
-
-      /* ── 4. Patch computed oklch on every element inside the report ── */
-      const savedInline: { el: HTMLElement; prop: string; original: string }[] = [];
-      const allEls = [el, document.documentElement, ...Array.from(el.querySelectorAll("*"))];
-      const COLOR_PROPS = [
-        "color", "background-color", "border-color",
-        "border-top-color", "border-right-color",
-        "border-bottom-color", "border-left-color",
-        "outline-color", "text-decoration-color",
-        "box-shadow", "background", "fill", "stroke",
-        "caret-color", "column-rule-color",
-      ];
-      allEls.forEach((node) => {
-        if (!(node instanceof HTMLElement)) return;
-        const comp = getComputedStyle(node);
-        COLOR_PROPS.forEach((prop) => {
-          const v = comp.getPropertyValue(prop);
-          if (v && v.includes("oklch")) {
-            const camel = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-            savedInline.push({ el: node, prop: camel, original: (node.style as any)[camel] || "" });
-            (node.style as any)[camel] = resolveOklch(v);
-          }
-        });
-      });
-
-      document.body.removeChild(probeDiv);
-
-      /* ── 5. Capture ── */
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
+      /* html-to-image uses the browser's native SVG foreignObject renderer,
+         so it handles oklch, CSS variables, and all modern CSS natively */
+      const dataUrl = await toPng(el, {
         backgroundColor: "#ffffff",
-        logging: false,
+        pixelRatio: 2,
+        cacheBust: true,
       });
 
-      /* ── 6. Restore everything ── */
-      overrideStyle.remove();
-
-      savedStyleTexts.forEach(({ styleEl, original }) => {
-        styleEl.textContent = original;
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Image load failed"));
+        img.src = dataUrl;
       });
 
-      savedRules.forEach(({ rule, prop, original, priority }) => {
-        rule.style.setProperty(prop, original, priority);
-      });
-
-      savedInline.forEach(({ el: node, prop, original }) => {
-        if (prop.startsWith("--")) {
-          node.style.setProperty(prop, original);
-        } else {
-          (node.style as any)[prop] = original;
-        }
-      });
-
-      /* ── Generate PDF ── */
-      const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-
+      const imgW = img.width;
+      const imgH = img.height;
       const pdfW = 210;
       const margin = 10;
       const contentW = pdfW - margin * 2;
@@ -542,8 +420,14 @@ export function Calculator({ id }: CalculatorProps) {
       const pdf = new jsPDF("p", "mm", "a4");
 
       if (contentH <= pageH) {
-        pdf.addImage(imgData, "PNG", margin, margin, contentW, contentH);
+        pdf.addImage(dataUrl, "PNG", margin, margin, contentW, contentH);
       } else {
+        const srcCanvas = document.createElement("canvas");
+        srcCanvas.width = imgW;
+        srcCanvas.height = imgH;
+        const srcCtx = srcCanvas.getContext("2d")!;
+        srcCtx.drawImage(img, 0, 0);
+
         const pageCanvasHeight = (pageH / contentH) * imgH;
         let yOffset = 0;
         let page = 0;
@@ -554,12 +438,10 @@ export function Calculator({ id }: CalculatorProps) {
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = imgW;
           sliceCanvas.height = sliceH;
-          const ctx = sliceCanvas.getContext("2d");
-          if (ctx) {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, imgW, sliceH);
-            ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
-          }
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, imgW, sliceH);
+          ctx.drawImage(srcCanvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
           const sliceData = sliceCanvas.toDataURL("image/png");
           const sliceMMH = (sliceH * contentW) / imgW;
           pdf.addImage(sliceData, "PNG", margin, margin, contentW, sliceMMH);
@@ -571,20 +453,21 @@ export function Calculator({ id }: CalculatorProps) {
       const fallbackName = i18n.language.startsWith("en") ? "company" : "empresa";
       const prefix = i18n.language.startsWith("en") ? "ai-report" : "informe-ai";
       const safeName = (name || fallbackName).toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const filename = `${prefix}-${safeName}.pdf`;
+      const fileName = `${prefix}-${safeName}.pdf`;
 
       try {
-        pdf.save(filename);
-      } catch {
         const blob = pdf.output("blob");
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = filename;
+        a.download = fileName;
+        a.style.display = "none";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } catch {
+        pdf.save(fileName);
       }
     } catch (e) {
       console.error("PDF generation error:", e);

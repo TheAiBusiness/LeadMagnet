@@ -12,8 +12,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      'html2canvas': path.resolve(__dirname, 'src/stubs/html2canvas.ts'),
     },
   },
 
