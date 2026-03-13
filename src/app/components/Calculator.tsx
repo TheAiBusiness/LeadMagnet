@@ -392,94 +392,116 @@ export function Calculator({ id }: CalculatorProps) {
     try {
       const el = reportRef.current;
 
-      /* ── Helper: resolve any oklch() → rgb() via browser engine ── */
+      /* ── Helper: resolve oklch() → rgb() via the browser engine ── */
+      const probeDiv = document.createElement("div");
+      probeDiv.style.display = "none";
+      document.body.appendChild(probeDiv);
       const resolveOklch = (raw: string): string => {
         if (!raw || !raw.includes("oklch")) return raw;
         return raw.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (match) => {
-          const d = document.createElement("div");
-          d.style.color = match;
-          document.body.appendChild(d);
-          const rgb = getComputedStyle(d).color;
-          document.body.removeChild(d);
+          probeDiv.style.color = match;
+          const rgb = getComputedStyle(probeDiv).color;
           return rgb || "transparent";
         });
       };
 
-      /* ── 1. Patch <style> tag textContent — html2canvas reads raw CSS ── */
-      const savedStyleTexts: { styleEl: HTMLStyleElement; original: string }[] = [];
-      try {
-        document.querySelectorAll("style").forEach((styleEl) => {
-          const txt = styleEl.textContent || "";
-          if (txt.includes("oklch")) {
-            savedStyleTexts.push({ styleEl, original: txt });
-            styleEl.textContent = txt.replace(/oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi, (m) => resolveOklch(m));
+      /* ── 1. Collect ALL oklch CSS custom properties from every stylesheet
+              and build a single override <style> tag (nuclear approach) ── */
+      const varOverrides: string[] = [];
+      const processRulesForVars = (ruleList: CSSRuleList) => {
+        for (let j = 0; j < ruleList.length; j++) {
+          const rule = ruleList[j];
+          if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
+            processRulesForVars((rule as CSSGroupingRule).cssRules);
+            continue;
           }
-        });
-      } catch { /* ignore */ }
-
-      /* ── 2. Patch LIVE CSSOM rules — replace oklch in-place ── */
-      const savedRules: { rule: CSSStyleRule; prop: string; original: string; priority: string }[] = [];
-      try {
-        const processRules = (ruleList: CSSRuleList) => {
-          for (let j = 0; j < ruleList.length; j++) {
-            const rule = ruleList[j];
-            if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
-              processRules((rule as CSSGroupingRule).cssRules);
-              continue;
-            }
-            if (!(rule instanceof CSSStyleRule)) continue;
-            for (let k = 0; k < rule.style.length; k++) {
-              const prop = rule.style[k];
+          if (!(rule instanceof CSSStyleRule)) continue;
+          for (let k = 0; k < rule.style.length; k++) {
+            const prop = rule.style[k];
+            if (prop.startsWith("--")) {
               const val = rule.style.getPropertyValue(prop);
               if (val && val.includes("oklch")) {
-                const priority = rule.style.getPropertyPriority(prop);
-                savedRules.push({ rule, prop, original: val, priority });
-                rule.style.setProperty(prop, resolveOklch(val), priority);
+                varOverrides.push(`${prop}:${resolveOklch(val)} !important`);
               }
             }
           }
-        };
-        for (let i = 0; i < document.styleSheets.length; i++) {
-          try { processRules(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
         }
-      } catch { /* ignore */ }
+      };
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        try { processRulesForVars(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
+      }
+      const overrideStyle = document.createElement("style");
+      overrideStyle.setAttribute("data-pdf-patch", "1");
+      if (varOverrides.length > 0) {
+        overrideStyle.textContent = `:root,*{${varOverrides.join(";")}}`;
+      }
+      document.head.appendChild(overrideStyle);
 
-      /* ── 3. Patch computed oklch on element styles inside report ── */
+      /* ── 2. Patch <style> tag textContent (html2canvas reads raw CSS) ── */
+      const savedStyleTexts: { styleEl: HTMLStyleElement; original: string }[] = [];
+      document.querySelectorAll("style:not([data-pdf-patch])").forEach((styleEl) => {
+        const txt = (styleEl as HTMLStyleElement).textContent || "";
+        if (txt.includes("oklch")) {
+          savedStyleTexts.push({ styleEl: styleEl as HTMLStyleElement, original: txt });
+          (styleEl as HTMLStyleElement).textContent = txt.replace(
+            /oklch\([^)]*(?:\([^)]*\)[^)]*)*\)/gi,
+            (m) => resolveOklch(m),
+          );
+        }
+      });
+
+      /* ── 3. Patch LIVE CSSOM rules (non-variable properties) ── */
+      const savedRules: { rule: CSSStyleRule; prop: string; original: string; priority: string }[] = [];
+      const patchCSSOM = (ruleList: CSSRuleList) => {
+        for (let j = 0; j < ruleList.length; j++) {
+          const rule = ruleList[j];
+          if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) {
+            patchCSSOM((rule as CSSGroupingRule).cssRules);
+            continue;
+          }
+          if (!(rule instanceof CSSStyleRule)) continue;
+          for (let k = 0; k < rule.style.length; k++) {
+            const prop = rule.style[k];
+            const val = rule.style.getPropertyValue(prop);
+            if (val && val.includes("oklch")) {
+              const priority = rule.style.getPropertyPriority(prop);
+              savedRules.push({ rule, prop, original: val, priority });
+              rule.style.setProperty(prop, resolveOklch(val), priority);
+            }
+          }
+        }
+      };
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        try { patchCSSOM(document.styleSheets[i].cssRules); } catch { /* cross-origin */ }
+      }
+
+      /* ── 4. Patch computed oklch on every element inside the report ── */
       const savedInline: { el: HTMLElement; prop: string; original: string }[] = [];
-      const allEls = [el, ...Array.from(el.querySelectorAll("*"))];
+      const allEls = [el, document.documentElement, ...Array.from(el.querySelectorAll("*"))];
       const COLOR_PROPS = [
-        "color", "backgroundColor", "borderColor",
-        "borderTopColor", "borderRightColor",
-        "borderBottomColor", "borderLeftColor",
-        "outlineColor", "textDecorationColor",
-        "boxShadow", "background",
+        "color", "background-color", "border-color",
+        "border-top-color", "border-right-color",
+        "border-bottom-color", "border-left-color",
+        "outline-color", "text-decoration-color",
+        "box-shadow", "background", "fill", "stroke",
+        "caret-color", "column-rule-color",
       ];
       allEls.forEach((node) => {
         if (!(node instanceof HTMLElement)) return;
         const comp = getComputedStyle(node);
-        COLOR_PROPS.forEach((camel) => {
-          const kebab = camel.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
-          const v = comp.getPropertyValue(kebab);
+        COLOR_PROPS.forEach((prop) => {
+          const v = comp.getPropertyValue(prop);
           if (v && v.includes("oklch")) {
+            const camel = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
             savedInline.push({ el: node, prop: camel, original: (node.style as any)[camel] || "" });
             (node.style as any)[camel] = resolveOklch(v);
           }
         });
-        /* Also patch CSS custom properties (--*) containing oklch */
-        const inlineStyle = node.getAttribute("style") || "";
-        const cssVarMatches = inlineStyle.match(/--[\w-]+/g);
-        if (cssVarMatches) {
-          cssVarMatches.forEach((varName) => {
-            const v = comp.getPropertyValue(varName).trim();
-            if (v && v.includes("oklch")) {
-              savedInline.push({ el: node, prop: varName, original: node.style.getPropertyValue(varName) });
-              node.style.setProperty(varName, resolveOklch(v));
-            }
-          });
-        }
       });
 
-      /* ── 4. Capture ── */
+      document.body.removeChild(probeDiv);
+
+      /* ── 5. Capture ── */
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
@@ -487,17 +509,17 @@ export function Calculator({ id }: CalculatorProps) {
         logging: false,
       });
 
-      /* ── 5. Restore <style> tag text ── */
+      /* ── 6. Restore everything ── */
+      overrideStyle.remove();
+
       savedStyleTexts.forEach(({ styleEl, original }) => {
         styleEl.textContent = original;
       });
 
-      /* ── 6. Restore CSSOM rules ── */
       savedRules.forEach(({ rule, prop, original, priority }) => {
         rule.style.setProperty(prop, original, priority);
       });
 
-      /* ── 7. Restore inline styles ── */
       savedInline.forEach(({ el: node, prop, original }) => {
         if (prop.startsWith("--")) {
           node.style.setProperty(prop, original);
