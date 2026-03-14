@@ -243,15 +243,31 @@ function computeUrgencyScore(d: Record<string, string>, lang: "en" | "es" = "es"
 // ─── Label lookup tables for diagnostic email ───────────────────────────────
 const DIAG_LABELS: Record<"en" | "es", Record<string, Record<string, string>>> = {
   en: {
-    step1: { roleCeo: "CEO / founder", roleDireccion: "Management", roleOps: "Operations", roleTech: "Technology", roleOtro: "Other" },
-    step2: { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
-    step3: { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step1:  { roleCeo: "CEO / founder", roleDireccion: "Management", roleOps: "Operations", roleTech: "Technology", roleOtro: "Other" },
+    step2:  { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
+    step3:  { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step4:  { yesClear: "Yes, with a clear system", sometimes: "Sometimes", little: "Very little", no: "Not really" },
+    step5:  { rarely: "Almost never", sometimes: "Sometimes", often: "Quite often", tooMany: "Too many times" },
+    step6:  { same: "It would run the same", adjustments: "There'd be some adjustments", slowdown: "It would slow down", depends: "It depends on me" },
+    step7:  { rarely: "Almost never", sometimes: "Sometimes", quite: "Quite a bit", tooMuch: "Too much" },
+    step8:  { almostNone: "Almost none", some: "Some", quite: "Quite a bit", tooMuch: "Too much" },
+    step9:  { yesClear: "Yes, with clear data", moreOrLess: "More or less", intuition: "We have a feeling", dontKnow: "We don't know" },
+    step10: { fast: "We execute fast", sometimes: "We sometimes get there", hard: "We struggle to react", late: "We often get there late" },
+    step11: { ok: "We'd hold up fine", adjustments: "With some adjustments", complicated: "It'd get complicated", break: "It'd break" },
     step12: { control: "More control", freeTeam: "Free up the team", opportunities: "Not miss opportunities", processes: "Tidy processes", scale: "Scale without breaking" },
   },
   es: {
-    step1: { roleCeo: "CEO / fundador", roleDireccion: "Dirección", roleOps: "Operaciones", roleTech: "Tecnología", roleOtro: "Otro" },
-    step2: { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
-    step3: { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step1:  { roleCeo: "CEO / fundador", roleDireccion: "Dirección", roleOps: "Operaciones", roleTech: "Tecnología", roleOtro: "Otro" },
+    step2:  { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
+    step3:  { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step4:  { yesClear: "Sí, con sistema claro", sometimes: "Algunas veces", little: "Muy poco", no: "No realmente" },
+    step5:  { rarely: "Casi nunca", sometimes: "A veces", often: "Bastante a menudo", tooMany: "Demasiadas veces" },
+    step6:  { same: "Funcionaría igual", adjustments: "Habría ajustes", slowdown: "Se ralentizaría", depends: "Depende de mí" },
+    step7:  { rarely: "Casi nunca", sometimes: "A veces", quite: "Bastante", tooMuch: "Demasiado" },
+    step8:  { almostNone: "Casi nada", some: "Algo", quite: "Bastante", tooMuch: "Demasiado" },
+    step9:  { yesClear: "Sí, con datos claros", moreOrLess: "Más o menos", intuition: "Lo intuimos", dontKnow: "No lo sabemos" },
+    step10: { fast: "La ejecutamos rápido", sometimes: "A veces llegamos", hard: "Nos cuesta reaccionar", late: "Solemos llegar tarde" },
+    step11: { ok: "Aguantaríamos bien", adjustments: "Con algunos ajustes", complicated: "Se complicaría", break: "Se rompería" },
     step12: { control: "Tener más control", freeTeam: "Liberar al equipo", opportunities: "No perder oportunidades", processes: "Ordenar procesos", scale: "Escalar sin romper" },
   },
 };
@@ -411,10 +427,11 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
 
     // Internal notification
     try {
+      const tl = (step: string, key?: string) => key ? (DIAG_LABELS.es[step]?.[key] ?? key) : "-";
       await sgMail.send({
         to: notify(), from: from(),
         subject: `🔔 Diagnóstico: ${sName || "Anónimo"} — ${urgency.level} (${urgency.value}/100)`,
-        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailStr)}\nUrgencia: ${urgency.level} (${urgency.value}/100)\n\nRol: ${esc(role)}\nEmpleados: ${esc(employees)}\nClientes: ${esc(clients)}\nUpselling: ${esc(upselling)}\nDecisiones por memoria: ${esc(memoryDecisions)}\nAusencia: ${esc(absence)}\nTiempo perdido: ${esc(lostTime)}\nTrabajo manual: ${esc(manualWork)}\nVisibilidad rentab.: ${esc(profitVisibility)}\nOportunidades: ${esc(opportunities)}\nDuplicar clientes: ${esc(doubleClients)}\nDesorden principal: ${esc(mainDisorder)}\n\nSector: ${esc(sector)}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}</pre>`,
+        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailStr)}\nUrgencia: ${urgency.level} (${urgency.value}/100)\n\nRol: ${tl("step1", role)}\nEmpleados: ${tl("step2", employees)}\nClientes: ${tl("step3", clients)}\nUpselling: ${tl("step4", upselling)}\nDecisiones por memoria: ${tl("step5", memoryDecisions)}\nAusencia: ${tl("step6", absence)}\nTiempo perdido: ${tl("step7", lostTime)}\nTrabajo manual: ${tl("step8", manualWork)}\nVisibilidad rentab.: ${tl("step9", profitVisibility)}\nOportunidades: ${tl("step10", opportunities)}\nDuplicar clientes: ${tl("step11", doubleClients)}\nDesorden principal: ${tl("step12", mainDisorder)}\n\nSector: ${esc(sector)}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}</pre>`,
       });
     } catch (notifyErr) {
       console.error("Notification email failed (non-blocking):", notifyErr);
