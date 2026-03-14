@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import logoImg from "@/assets/dd0f90164673663df94faa349662ec5a4dc60874.png";
 import { Calculator } from "./Calculator";
@@ -6,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function CalculatorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -24,7 +26,7 @@ export function CalculatorPage() {
           style={{ fontSize: "0.85rem" }}
         >
           <ArrowLeft size={16} />
-          <span>Volver</span>
+          <span>{t("calculatorPage.back")}</span>
         </motion.button>
         <span
           className="tracking-tight text-[#0B0B0B]"

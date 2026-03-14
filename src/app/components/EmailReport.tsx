@@ -1,3 +1,4 @@
+import React from 'react'
 import { motion } from "motion/react";
 import {
   BarChart3,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 /* ─── Helper Components ─── */
 function SectionHeader({ label, delay = 0 }: { label: string; delay?: number }) {
@@ -117,172 +119,133 @@ export function EmailReport({
   doubleClients,
   mainDisorder,
 }: EmailReportProps) {
-  const today = new Date().toLocaleDateString("es-ES", {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language === "en" ? "en" : "es";
+  const today = new Date().toLocaleDateString(lang === "en" ? "en-GB" : "es-ES", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
-  /* ── Termómetro de urgencia basado en las respuestas del diagnóstico ── */
+  /* ── Urgency score from diagnosis answers (key-based) ── */
   const urgencyScore = useMemo(() => {
     let score = 0;
-    const issues: string[] = [];
+    const issueKeys: string[] = [];
 
-    // Pregunta 3: Clientes activos
-    if (clients === "+1000") {
+    if (clients === "c1000") {
       score += 3;
-      issues.push("Alto volumen de clientes requiere sistemas escalables");
-    } else if (clients === "201–1000") {
+      issueKeys.push("diagnostic.issueHighVolume");
+    } else if (clients === "c201_1000") {
       score += 2;
-      issues.push("Volumen de clientes en crecimiento");
-    } else if (clients === "51–200") {
-      score += 1;
-    }
+      issueKeys.push("diagnostic.issueVolumeGrowth");
+    } else if (clients === "c51_200") score += 1;
 
-    // Pregunta 4: Upselling
-    if (upselling === "No realmente") {
+    if (upselling === "no") {
       score += 3;
-      issues.push("Oportunidades de upselling sin aprovechar");
-    } else if (upselling === "Muy poco") {
+      issueKeys.push("diagnostic.issueUpsellingLost");
+    } else if (upselling === "little") {
       score += 2.5;
-      issues.push("Potencial de upselling desaprovechado");
-    } else if (upselling === "Algunas veces") {
-      score += 1;
-    }
+      issueKeys.push("diagnostic.issueUpsellingLow");
+    } else if (upselling === "sometimes") score += 1;
 
-    // Pregunta 5: Decisiones por memoria
-    if (memoryDecisions === "Demasiadas veces") {
+    if (memoryDecisions === "tooMany") {
       score += 4;
-      issues.push("Decisiones sin datos: riesgo operativo crítico");
-    } else if (memoryDecisions === "Bastante a menudo") {
+      issueKeys.push("diagnostic.issueDecisionsNoData");
+    } else if (memoryDecisions === "often") {
       score += 3;
-      issues.push("Falta de información centralizada para decidir");
-    } else if (memoryDecisions === "A veces") {
-      score += 1.5;
-    }
+      issueKeys.push("diagnostic.issueNoCentralizedInfo");
+    } else if (memoryDecisions === "sometimes") score += 1.5;
 
-    // Pregunta 6: Ausencia
-    if (absence === "Depende de mí") {
+    if (absence === "depends") {
       score += 4;
-      issues.push("Dependencia crítica: el negocio no funciona sin ti");
-    } else if (absence === "Se ralentizaría") {
+      issueKeys.push("diagnostic.issueDependencyCritical");
+    } else if (absence === "slowdown") {
       score += 3;
-      issues.push("Procesos no documentados ni sistematizados");
-    } else if (absence === "Habría ajustes") {
-      score += 1.5;
-    }
+      issueKeys.push("diagnostic.issueProcessesNotDoc");
+    } else if (absence === "adjustments") score += 1.5;
 
-    // Pregunta 7: Tiempo perdido
-    if (lostTime === "Demasiado") {
+    if (lostTime === "tooMuch") {
       score += 3;
-      issues.push("Conocimiento disperso frena la operativa");
-    } else if (lostTime === "Bastante") {
+      issueKeys.push("diagnostic.issueScatteredKnowledge");
+    } else if (lostTime === "quite") {
       score += 2;
-      issues.push("Información no centralizada");
-    } else if (lostTime === "A veces") {
-      score += 1;
-    }
+      issueKeys.push("diagnostic.issueInfoNotCentralized");
+    } else if (lostTime === "sometimes") score += 1;
 
-    // Pregunta 8: Trabajo manual
-    if (manualWork === "Demasiado") {
+    if (manualWork === "tooMuch") {
       score += 3;
-      issues.push("Tareas manuales consumen recursos valiosos");
-    } else if (manualWork === "Bastante") {
+      issueKeys.push("diagnostic.issueManualTasksCost");
+    } else if (manualWork === "quite") {
       score += 2;
-      issues.push("Procesos sin automatizar");
-    } else if (manualWork === "Algo") {
-      score += 1;
-    }
+      issueKeys.push("diagnostic.issueProcessesNotAuto");
+    } else if (manualWork === "some") score += 1;
 
-    // Pregunta 9: Visibilidad de rentabilidad
-    if (profitVisibility === "No lo sabemos") {
+    if (profitVisibility === "dontKnow") {
       score += 4;
-      issues.push("Sin visibilidad de rentabilidad: decisiones a ciegas");
-    } else if (profitVisibility === "Lo intuimos") {
+      issueKeys.push("diagnostic.issueNoProfitVisibility");
+    } else if (profitVisibility === "intuition") {
       score += 3;
-      issues.push("Falta de datos para optimizar rentabilidad");
-    } else if (profitVisibility === "Más o menos") {
-      score += 1.5;
-    }
+      issueKeys.push("diagnostic.issueLackDataProfit");
+    } else if (profitVisibility === "moreOrLess") score += 1.5;
 
-    // Pregunta 10: Oportunidades
-    if (opportunities === "Solemos llegar tarde") {
+    if (opportunities === "late") {
       score += 3.5;
-      issues.push("Lentitud en ejecutar oportunidades comerciales");
-    } else if (opportunities === "Nos cuesta reaccionar") {
+      issueKeys.push("diagnostic.issueSlowOpportunities");
+    } else if (opportunities === "hard") {
       score += 2.5;
-      issues.push("Falta de agilidad comercial");
-    } else if (opportunities === "A veces llegamos") {
-      score += 1;
-    }
+      issueKeys.push("diagnostic.issueLackAgility");
+    } else if (opportunities === "sometimes") score += 1;
 
-    // Pregunta 11: Duplicar clientes
-    if (doubleClients === "Se rompería") {
+    if (doubleClients === "break") {
       score += 4;
-      issues.push("Infraestructura no preparada para escalar");
-    } else if (doubleClients === "Se complicaría") {
+      issueKeys.push("diagnostic.issueInfraNotReady");
+    } else if (doubleClients === "complicated") {
       score += 3;
-      issues.push("Procesos no diseñados para crecer");
-    } else if (doubleClients === "Con algunos ajustes") {
-      score += 1.5;
-    }
+      issueKeys.push("diagnostic.issueProcessesNotScale");
+    } else if (doubleClients === "adjustments") score += 1.5;
 
-    // Pregunta 12: Desorden principal
-    if (mainDisorder === "Escalar sin romper") {
+    if (mainDisorder === "scale") {
       score += 3.5;
-      issues.push("Crecimiento frenado por falta de sistemas");
-    } else if (mainDisorder === "No perder oportunidades") {
+      issueKeys.push("diagnostic.issueGrowthBlocked");
+    } else if (mainDisorder === "opportunities") {
       score += 3;
-      issues.push("Oportunidades comerciales que se escapan");
-    } else if (mainDisorder === "Ordenar procesos") {
+      issueKeys.push("diagnostic.issueOpportunitiesLost");
+    } else if (mainDisorder === "processes") {
       score += 2.5;
-      issues.push("Caos operativo afecta rendimiento");
-    } else if (mainDisorder === "Liberar al equipo") {
+      issueKeys.push("diagnostic.issueOperationalChaos");
+    } else if (mainDisorder === "freeTeam") {
       score += 2;
-      issues.push("Equipo atrapado en tareas de bajo valor");
-    } else if (mainDisorder === "Tener más control") {
-      score += 1.5;
-    }
+      issueKeys.push("diagnostic.issueTeamTrapped");
+    } else if (mainDisorder === "control") score += 1.5;
 
-    // Normalizar a escala 0-100
     const maxScore = 37;
     const normalizedScore = Math.min(Math.round((score / maxScore) * 100), 100);
 
-    // Lógica con 4 niveles (Verde/Amarillo/Naranja/Rojo)
-    let level: string;
+    let levelKey: string;
     let color: string;
-    let insight: string;
-    let action: string;
 
     if (normalizedScore >= 65) {
-      level = "MUY GRAVE";
-      color = "#DC2626"; // Rojo
-      insight = "Tu empresa tiene problemas estructurales críticos que están frenando su crecimiento y poniendo en riesgo su operativa diaria.";
-      action = "Necesitas actuar inmediatamente. Los problemas identificados están costando dinero y oportunidades cada día que pasa.";
+      levelKey = "VeryCritical";
+      color = "#DC2626";
     } else if (normalizedScore >= 45) {
-      level = "URGENTE";
-      color = "#EA580C"; // Naranja
-      insight = "Hay señales claras de desorden operativo que están limitando tu capacidad de crecer y aprovechar oportunidades.";
-      action = "Es momento de sistematizar. Estos problemas no se resolverán solos, necesitan intervención estructurada.";
+      levelKey = "Urgent";
+      color = "#EA580C";
     } else if (normalizedScore >= 25) {
-      level = "ATENCIÓN NECESARIA";
-      color = "#F59E0B"; // Amarillo
-      insight = "Tu empresa funciona, pero hay áreas de mejora importantes que podrían multiplicar tu eficiencia.";
-      action = "Tienes oportunidad de optimizar antes de que los pequeños problemas se conviertan en grandes. Es el momento ideal.";
+      levelKey = "Attention";
+      color = "#F59E0B";
     } else {
-      level = "BIEN POSICIONADO";
-      color = "#10B981"; // Verde
-      insight = "Tu empresa tiene bases sólidas. Los sistemas que implementes ahora te darán ventaja competitiva sostenible.";
-      action = "Aprovecha tu posición fuerte para automatizar e innovar desde una base estable.";
+      levelKey = "WellPositioned";
+      color = "#10B981";
     }
 
     return {
       value: normalizedScore,
-      level,
+      levelKey,
       color,
-      insight,
-      action,
-      issues: issues.slice(0, 3),
+      insightKey: `diagnostic.insight${levelKey}` as const,
+      actionKey: `diagnostic.action${levelKey}` as const,
+      levelLabelKey: `diagnostic.level${levelKey}` as const,
+      issues: issueKeys.slice(0, 3),
     };
   }, [
     clients,
@@ -329,15 +292,15 @@ export function EmailReport({
           </div>
           <div className="space-y-1">
             <p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}>
-              <span className="text-[#0B0B0B]/25">Para:</span> {email}
+              <span className="text-[#0B0B0B]/25">{t("diagnostic.to")}</span> {email}
             </p>
             <p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}>
-              <span className="text-[#0B0B0B]/25">De:</span> info@theaibusiness.com
+              <span className="text-[#0B0B0B]/25">{t("diagnostic.from")}</span> info@theaibusiness.com
             </p>
             <p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}>
-              <span className="text-[#0B0B0B]/25">Asunto:</span>{" "}
+              <span className="text-[#0B0B0B]/25">{t("diagnostic.subject")}</span>{" "}
               <span className="text-[#0B0B0B]/60" style={{ fontWeight: 500 }}>
-                {name}, tu diagnóstico empresarial está listo
+                {t("diagnostic.subjectReady", { name: name || t("diagnostic.yourBusiness") })}
               </span>
             </p>
           </div>
@@ -372,9 +335,9 @@ export function EmailReport({
             </p>
           </motion.div>
 
-          {/* ═══ TERMÓMETRO DE URGENCIA (PRIORIDAD #1) ═══ */}
+          {/* ═══ URGENCY LEVEL ═══ */}
           <div>
-            <SectionHeader label="NIVEL DE URGENCIA" delay={0.6} />
+            <SectionHeader label={t("diagnostic.urgencyLevel")} delay={0.6} />
             <motion.div
               initial={{ opacity: 0, y: 8, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -412,7 +375,7 @@ export function EmailReport({
                         color: urgencyScore.color,
                       }}
                     >
-                      {urgencyScore.level}
+                      {t(urgencyScore.levelLabelKey)}
                     </p>
                   </div>
                 </div>
@@ -433,7 +396,7 @@ export function EmailReport({
                     className="text-[#0B0B0B]/30 mt-1"
                     style={{ fontSize: "0.55rem" }}
                   >
-                    de 100
+                    {t("diagnostic.of100")}
                   </p>
                 </div>
               </div>
@@ -467,7 +430,7 @@ export function EmailReport({
                       letterSpacing: "0.12em",
                     }}
                   >
-                    DIAGNÓSTICO
+                    {t("diagnostic.diagnosis")}
                   </p>
                   <p
                     className="text-[#0B0B0B]"
@@ -477,7 +440,7 @@ export function EmailReport({
                       fontWeight: 500,
                     }}
                   >
-                    {urgencyScore.insight}
+                    {t(urgencyScore.insightKey)}
                   </p>
                 </div>
 
@@ -491,10 +454,10 @@ export function EmailReport({
                         letterSpacing: "0.12em",
                       }}
                     >
-                      PRINCIPALES SEÑALES
+                      {t("diagnostic.mainSignals")}
                     </p>
                     <div className="space-y-1.5">
-                      {urgencyScore.issues.map((issue, i) => (
+                      {urgencyScore.issues.map((key, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <div
                             className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
@@ -504,7 +467,7 @@ export function EmailReport({
                             className="text-[#0B0B0B]/50"
                             style={{ fontSize: "0.7rem", lineHeight: 1.6 }}
                           >
-                            {issue}
+                            {t(key)}
                           </p>
                         </div>
                       ))}
@@ -521,7 +484,7 @@ export function EmailReport({
                       letterSpacing: "0.12em",
                     }}
                   >
-                    QUÉ HACER AHORA
+                    {t("diagnostic.whatToDoNow")}
                   </p>
                   <p
                     className="text-[#0B0B0B]"
@@ -531,17 +494,17 @@ export function EmailReport({
                       fontWeight: 500,
                     }}
                   >
-                    {urgencyScore.action}
+                    {t(urgencyScore.actionKey)}
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Información básica del diagnóstico */}
+          {/* Profile */}
           {(role || employees || clients || mainDisorder) && (
             <div>
-              <SectionHeader label="TU PERFIL" delay={1.0} />
+              <SectionHeader label={t("diagnostic.profileSection")} delay={1.0} />
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -559,13 +522,13 @@ export function EmailReport({
                         className="text-[#0B0B0B]/25"
                         style={{ fontSize: "0.58rem", fontWeight: 500 }}
                       >
-                        Rol
+                        {t("diagnostic.role")}
                       </p>
                       <p
                         className="text-[#0B0B0B]"
                         style={{ fontSize: "0.78rem", fontWeight: 500 }}
                       >
-                        {role}
+                        {t(`calculator.step1.${role}`)}
                       </p>
                     </div>
                   </div>
@@ -581,13 +544,13 @@ export function EmailReport({
                         className="text-[#0B0B0B]/25"
                         style={{ fontSize: "0.58rem", fontWeight: 500 }}
                       >
-                        Empleados
+                        {t("diagnostic.employees")}
                       </p>
                       <p
                         className="text-[#0B0B0B]"
                         style={{ fontSize: "0.78rem", fontWeight: 500 }}
                       >
-                        {employees}
+                        {t(`calculator.step2.${employees}`)}
                       </p>
                     </div>
                   </div>
@@ -603,13 +566,13 @@ export function EmailReport({
                         className="text-[#0B0B0B]/25"
                         style={{ fontSize: "0.58rem", fontWeight: 500 }}
                       >
-                        Clientes activos
+                        {t("diagnostic.activeClients")}
                       </p>
                       <p
                         className="text-[#0B0B0B]"
                         style={{ fontSize: "0.78rem", fontWeight: 500 }}
                       >
-                        {clients}
+                        {t(`calculator.step3.${clients}`)}
                       </p>
                     </div>
                   </div>
@@ -625,13 +588,13 @@ export function EmailReport({
                         className="text-[#0B0B0B]/25"
                         style={{ fontSize: "0.58rem", fontWeight: 500 }}
                       >
-                        Prioridad principal
+                        {t("diagnostic.mainPriority")}
                       </p>
                       <p
                         className="text-[#0B0B0B]"
                         style={{ fontSize: "0.78rem", fontWeight: 500 }}
                       >
-                        {mainDisorder}
+                        {t(`calculator.step12.${mainDisorder}`)}
                       </p>
                     </div>
                   </div>
@@ -640,89 +603,50 @@ export function EmailReport({
             </div>
           )}
 
-          {/* Insights clave del diagnóstico */}
+          {/* Key insights */}
           <div>
-            <SectionHeader label="INSIGHTS CLAVE" delay={1.3} />
+            <SectionHeader label={t("diagnostic.insightsSection")} delay={1.3} />
             <div className="space-y-3">
-              {/* Escalabilidad */}
               {doubleClients && (
                 <InsightCard
                   icon={TrendingUp}
-                  title="Capacidad de escalar"
-                  value={doubleClients}
-                  insight={
-                    doubleClients === "Se rompería"
-                      ? "Tu infraestructura actual no está preparada para duplicar el volumen. Necesitas sistematizar antes de crecer."
-                      : doubleClients === "Se complicaría"
-                        ? "Podrías crecer, pero sería caótico. Es el momento de construir sistemas escalables."
-                        : doubleClients === "Con algunos ajustes"
-                          ? "Tienes buena base, algunos ajustes te permitirán escalar sin problemas."
-                          : "Tu empresa puede crecer de forma sostenible con tu estructura actual."
-                  }
+                  title={t("diagnostic.insightScaleCapacity")}
+                  value={t(`calculator.step11.${doubleClients}`)}
+                  insight={t(`diagnostic.insightScale${doubleClients.charAt(0).toUpperCase() + doubleClients.slice(1)}` as "diagnostic.insightScaleBreak")}
                   delay={1.4}
                 />
               )}
-
-              {/* Visibilidad */}
               {profitVisibility && (
                 <InsightCard
                   icon={BarChart3}
-                  title="Visibilidad de datos"
-                  value={profitVisibility}
-                  insight={
-                    profitVisibility === "No lo sabemos"
-                      ? "Estás tomando decisiones estratégicas sin datos. Esto es un riesgo crítico que debes resolver ya."
-                      : profitVisibility === "Lo intuimos"
-                        ? "La intuición es valiosa, pero los datos te darían certeza y te ayudarían a optimizar."
-                        : profitVisibility === "Más o menos"
-                          ? "Tienes visibilidad parcial. Completar el panorama te dará ventaja competitiva."
-                          : "Excelente control de datos. Ahora es momento de automatizar la extracción de insights."
-                  }
+                  title={t("diagnostic.insightDataVisibility")}
+                  value={t(`calculator.step9.${profitVisibility}`)}
+                  insight={t(`diagnostic.insightData${profitVisibility === "dontKnow" ? "DontKnow" : profitVisibility === "intuition" ? "Intuition" : profitVisibility === "moreOrLess" ? "MoreOrLess" : "YesClear"}` as "diagnostic.insightDataYesClear")}
                   delay={1.5}
                 />
               )}
-
-              {/* Agilidad comercial */}
               {opportunities && (
                 <InsightCard
                   icon={Zap}
-                  title="Agilidad comercial"
-                  value={opportunities}
-                  insight={
-                    opportunities === "Solemos llegar tarde"
-                      ? "Estás perdiendo oportunidades por falta de sistemas. Cada oportunidad perdida es dinero que se va."
-                      : opportunities === "Nos cuesta reaccionar"
-                        ? "Tienes capacidad pero te falta velocidad. Sistematizar te dará la agilidad que necesitas."
-                        : opportunities === "A veces llegamos"
-                          ? "Tu tasa de aprovechamiento puede mejorar significativamente con mejor estructura."
-                          : "Gran capacidad de ejecución. Mantén y mejora este nivel con automatización."
-                  }
+                  title={t("diagnostic.insightAgility")}
+                  value={t(`calculator.step10.${opportunities}`)}
+                  insight={t(`diagnostic.insightAgility${opportunities === "late" ? "Late" : opportunities === "hard" ? "Hard" : opportunities === "sometimes" ? "Sometimes" : "Fast"}` as "diagnostic.insightAgilityFast")}
                   delay={1.6}
                 />
               )}
-
-              {/* Dependencia personal */}
               {absence && (
                 <InsightCard
                   icon={Users}
-                  title="Autonomía del negocio"
-                  value={absence}
-                  insight={
-                    absence === "Depende de mí"
-                      ? "Dependencia crítica: has construido un trabajo, no un negocio. Necesitas documentar y sistematizar urgentemente."
-                      : absence === "Se ralentizaría"
-                        ? "El conocimiento está en las personas, no en sistemas. Esto te impide escalar y te genera estrés."
-                        : absence === "Habría ajustes"
-                          ? "Vas por buen camino. Completa la sistematización para tener verdadera autonomía."
-                          : "Excelente nivel de autonomía. Tu negocio funciona con o sin ti."
-                  }
+                  title={t("diagnostic.insightAutonomy")}
+                  value={t(`calculator.step6.${absence}`)}
+                  insight={t(`diagnostic.insightAutonomy${absence === "depends" ? "Depends" : absence === "slowdown" ? "Slowdown" : absence === "adjustments" ? "Adjustments" : "Same"}` as "diagnostic.insightAutonomySame")}
                   delay={1.7}
                 />
               )}
             </div>
           </div>
 
-          {/* CTA principal */}
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -738,26 +662,22 @@ export function EmailReport({
               }}
             >
               <Calendar size={16} />
-              Agenda tu sesión estratégica gratuita
+              {t("diagnostic.ctaBookSession")}
               <ArrowUpRight size={15} className="text-white/60" />
             </div>
             <p
               className="text-[#0B0B0B]/25 mt-4"
               style={{ fontSize: "0.62rem", lineHeight: 1.6 }}
             >
-              30 minutos para diseñar tu plan de acción · Sin compromiso ·
-              Resultados en 48h
+              {t("diagnostic.ctaSub")}
             </p>
             <p
               className="text-[#0B0B0B]/40 mt-3 max-w-[480px] mx-auto"
               style={{ fontSize: "0.7rem", lineHeight: 1.65 }}
             >
-              Basándonos en tu diagnóstico (nivel{" "}
-              <span style={{ color: urgencyScore.color, fontWeight: 600 }}>
-                {urgencyScore.level}
-              </span>
-              ), te ayudaremos a priorizar las acciones que generarán más
-              impacto en menos tiempo.
+              {t("diagnostic.ctaBasedOn", {
+                level: t(urgencyScore.levelLabelKey),
+              })}
             </p>
           </motion.div>
 
@@ -767,12 +687,11 @@ export function EmailReport({
               className="text-[#0B0B0B]/15"
               style={{ fontSize: "0.55rem", lineHeight: 1.6 }}
             >
-              The AI Business · info@theaibusiness.com
-              <br />* Este diagnóstico está basado en tus respuestas y
-              benchmarks del sector.
+              {t("diagnostic.footer")}
               <br />
-              Es una herramienta orientativa para ayudarte a identificar áreas
-              de mejora.
+              {t("diagnostic.footerDisclaimer")}
+              <br />
+              {t("diagnostic.footerDisclaimer2")}
             </p>
           </div>
         </div>

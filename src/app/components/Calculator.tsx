@@ -1298,12 +1298,12 @@ export function Calculator({ id }: CalculatorProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setErr((data as { error?: string }).error || "Error al enviar. Inténtalo de nuevo.");
+        setErr((data as { error?: string }).error || t("calculator.errorSend"));
         return;
       }
       setDone(true);
     } catch {
-      setErr("Error de conexión. Inténtalo de nuevo.");
+      setErr(t("calculator.errorConnection"));
     } finally {
       setSending(false);
     }
@@ -2681,7 +2681,7 @@ export function Calculator({ id }: CalculatorProps) {
                       >
                         <input
                           type="text"
-                          placeholder="Tu nombre"
+                          placeholder={t("calc.namePlaceholder")}
                           value={name}
                           onChange={(e) =>
                             setName(e.target.value)
@@ -2904,7 +2904,7 @@ export function Calculator({ id }: CalculatorProps) {
                         fontWeight: 500,
                       }}
                     >
-                      Reservar llamada
+                      {t("calculator.bookCall")}
                     </motion.a>
                     <div className="hidden">
                     <motion.button
@@ -2960,7 +2960,7 @@ export function Calculator({ id }: CalculatorProps) {
                       className="text-[#0B0B0B]/20"
                       style={{ fontSize: "0.7rem" }}
                     >
-                      Vista previa del email
+                      {t("calculator.emailPreviewHint")}
                     </span>
                     <ChevronDown
                       size={14}
@@ -2973,18 +2973,18 @@ export function Calculator({ id }: CalculatorProps) {
                     <EmailReport
                       name={name}
                       email={email}
-                      role={role ? t(`calculator.step1.${role}`) : ""}
-                      employees={employees ? t(`calculator.step2.${employees}`) : ""}
-                      clients={clients ? t(`calculator.step3.${clients}`) : ""}
-                      upselling={upselling ? t(`calculator.step4.${upselling}`) : ""}
-                      memoryDecisions={memoryDecisions ? t(`calculator.step5.${memoryDecisions}`) : ""}
-                      absence={absence ? t(`calculator.step6.${absence}`) : ""}
-                      lostTime={lostTime ? t(`calculator.step7.${lostTime}`) : ""}
-                      manualWork={manualWork ? t(`calculator.step8.${manualWork}`) : ""}
-                      profitVisibility={profitVisibility ? t(`calculator.step9.${profitVisibility}`) : ""}
-                      opportunities={opportunities ? t(`calculator.step10.${opportunities}`) : ""}
-                      doubleClients={doubleClients ? t(`calculator.step11.${doubleClients}`) : ""}
-                      mainDisorder={mainDisorder ? t(`calculator.step12.${mainDisorder}`) : ""}
+                      role={role}
+                      employees={employees}
+                      clients={clients}
+                      upselling={upselling}
+                      memoryDecisions={memoryDecisions}
+                      absence={absence}
+                      lostTime={lostTime}
+                      manualWork={manualWork}
+                      profitVisibility={profitVisibility}
+                      opportunities={opportunities}
+                      doubleClients={doubleClients}
+                      mainDisorder={mainDisorder}
                     />
                   </div>
                 </motion.div>
@@ -3013,7 +3013,7 @@ export function Calculator({ id }: CalculatorProps) {
               }`}
               style={{ fontSize: "0.88rem" }}
             >
-              <ArrowLeft size={16} /> Anterior
+              <ArrowLeft size={16} /> {t("calculator.prev")}
             </motion.button>
             {(step === 5 || step === 6 || step === 7) && (
               <div className="hidden">
