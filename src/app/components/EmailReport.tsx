@@ -653,8 +653,11 @@ export function EmailReport({
             transition={{ duration: 0.5, delay: 2.0 }}
             className="text-center pt-4"
           >
-            <div
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#0B0B0B] text-white rounded-full cursor-pointer"
+            <a
+              href="https://cal.com/alejandro-rios-calera-qcnhfq/auditoria-theaibusiness"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#0B0B0B] text-white rounded-full cursor-pointer no-underline"
               style={{
                 fontSize: "0.95rem",
                 fontWeight: 500,
@@ -664,7 +667,7 @@ export function EmailReport({
               <Calendar size={16} />
               {t("diagnostic.ctaBookSession")}
               <ArrowUpRight size={15} className="text-white/60" />
-            </div>
+            </a>
             <p
               className="text-[#0B0B0B]/25 mt-4"
               style={{ fontSize: "0.62rem", lineHeight: 1.6 }}

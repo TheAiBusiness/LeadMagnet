@@ -85,7 +85,7 @@ function setupSupabase(): SupabaseClient | null {
 const setupSG = () => { const k = process.env.SENDGRID_API_KEY; if (k) sgMail.setApiKey(k); return !!k; };
 const from = () => ({ email: process.env.SENDGRID_FROM_EMAIL || "info@theaibusiness.com", name: process.env.SENDGRID_FROM_NAME || "The AI Business" });
 const notify = () => process.env.NOTIFY_EMAIL || from().email;
-const calendlyUrl = () => process.env.CALENDLY_URL || "https://cal.com/alejandro-rios-calera-qcnhfq/auditoria-theaibusiness";
+const calendlyUrl = () => process.env.CALENDLY_URL || "https://theaibusiness.com/#contacto";
 const fmtLocale = (n: number, lang: string) => n.toLocaleString(lang === "en" ? "en-US" : "es-ES");
 const esc = (v: unknown): string => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
