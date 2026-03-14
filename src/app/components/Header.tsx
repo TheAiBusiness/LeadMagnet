@@ -49,7 +49,7 @@ export function Header() {
               {item.label}
             </motion.a>
           ))}
-          <span className="flex items-center gap-1 text-[#0B0B0B]/40" style={{ fontSize: "0.75rem" }}>
+          <span className="hidden items-center gap-1 text-[#0B0B0B]/40" style={{ fontSize: "0.75rem" }}>
             <button
               type="button"
               onClick={() => i18n.changeLanguage("es")}
