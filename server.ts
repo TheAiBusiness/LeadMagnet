@@ -210,44 +210,100 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 // ═══════════════════════════════════
 // POST /api/send-diagnostic
 // ═══════════════════════════════════
-function computeUrgencyScore(d: Record<string, string>) {
+function computeUrgencyScore(d: Record<string, string>, lang: "en" | "es" = "es") {
   let score = 0;
-  if (d.clients === "+1000") score += 3; else if (d.clients === "201–1000") score += 2; else if (d.clients === "51–200") score += 1;
-  if (d.upselling === "No realmente") score += 3; else if (d.upselling === "Muy poco") score += 2.5; else if (d.upselling === "Algunas veces") score += 1;
-  if (d.memoryDecisions === "Demasiadas veces") score += 4; else if (d.memoryDecisions === "Bastante a menudo") score += 3; else if (d.memoryDecisions === "A veces") score += 1.5;
-  if (d.absence === "Depende de mí") score += 4; else if (d.absence === "Se ralentizaría") score += 3; else if (d.absence === "Habría ajustes") score += 1.5;
-  if (d.lostTime === "Demasiado") score += 3; else if (d.lostTime === "Bastante") score += 2; else if (d.lostTime === "A veces") score += 1;
-  if (d.manualWork === "Demasiado") score += 3; else if (d.manualWork === "Bastante") score += 2; else if (d.manualWork === "Algo") score += 1;
-  if (d.profitVisibility === "No lo sabemos") score += 4; else if (d.profitVisibility === "Lo intuimos") score += 3; else if (d.profitVisibility === "Más o menos") score += 1.5;
-  if (d.opportunities === "Solemos llegar tarde") score += 3.5; else if (d.opportunities === "Nos cuesta reaccionar") score += 2.5; else if (d.opportunities === "A veces llegamos") score += 1;
-  if (d.doubleClients === "Se rompería") score += 4; else if (d.doubleClients === "Se complicaría") score += 3; else if (d.doubleClients === "Con algunos ajustes") score += 1.5;
-  if (d.mainDisorder === "Escalar sin romper") score += 3.5; else if (d.mainDisorder === "No perder oportunidades") score += 3; else if (d.mainDisorder === "Ordenar procesos") score += 2.5; else if (d.mainDisorder === "Liberar al equipo") score += 2; else if (d.mainDisorder === "Tener más control") score += 1.5;
+  if (d.clients === "c1000") score += 3; else if (d.clients === "c201_1000") score += 2; else if (d.clients === "c51_200") score += 1;
+  if (d.upselling === "no") score += 3; else if (d.upselling === "little") score += 2.5; else if (d.upselling === "sometimes") score += 1;
+  if (d.memoryDecisions === "tooMany") score += 4; else if (d.memoryDecisions === "often") score += 3; else if (d.memoryDecisions === "sometimes") score += 1.5;
+  if (d.absence === "depends") score += 4; else if (d.absence === "slowdown") score += 3; else if (d.absence === "adjustments") score += 1.5;
+  if (d.lostTime === "tooMuch") score += 3; else if (d.lostTime === "quite") score += 2; else if (d.lostTime === "sometimes") score += 1;
+  if (d.manualWork === "tooMuch") score += 3; else if (d.manualWork === "quite") score += 2; else if (d.manualWork === "some") score += 1;
+  if (d.profitVisibility === "dontKnow") score += 4; else if (d.profitVisibility === "intuition") score += 3; else if (d.profitVisibility === "moreOrLess") score += 1.5;
+  if (d.opportunities === "late") score += 3.5; else if (d.opportunities === "hard") score += 2.5; else if (d.opportunities === "sometimes") score += 1;
+  if (d.doubleClients === "break") score += 4; else if (d.doubleClients === "complicated") score += 3; else if (d.doubleClients === "adjustments") score += 1.5;
+  if (d.mainDisorder === "scale") score += 3.5; else if (d.mainDisorder === "opportunities") score += 3; else if (d.mainDisorder === "processes") score += 2.5; else if (d.mainDisorder === "freeTeam") score += 2; else if (d.mainDisorder === "control") score += 1.5;
   const value = Math.min(Math.round((score / 37) * 100), 100);
   let level: string, color: string;
-  if (value >= 65) { level = "MUY GRAVE"; color = "#DC2626"; }
-  else if (value >= 45) { level = "URGENTE"; color = "#EA580C"; }
-  else if (value >= 25) { level = "ATENCIÓN NECESARIA"; color = "#F59E0B"; }
-  else { level = "BIEN POSICIONADO"; color = "#10B981"; }
+  if (value >= 65) {
+    level = lang === "en" ? "VERY CRITICAL" : "MUY GRAVE";
+    color = "#DC2626";
+  } else if (value >= 45) {
+    level = lang === "en" ? "URGENT" : "URGENTE";
+    color = "#EA580C";
+  } else if (value >= 25) {
+    level = lang === "en" ? "ATTENTION NEEDED" : "ATENCIÓN NECESARIA";
+    color = "#F59E0B";
+  } else {
+    level = lang === "en" ? "WELL POSITIONED" : "BIEN POSICIONADO";
+    color = "#10B981";
+  }
   return { value, level, color };
 }
+
+// ─── Label lookup tables for diagnostic email ───────────────────────────────
+const DIAG_LABELS: Record<"en" | "es", Record<string, Record<string, string>>> = {
+  en: {
+    step1: { roleCeo: "CEO / founder", roleDireccion: "Management", roleOps: "Operations", roleTech: "Technology", roleOtro: "Other" },
+    step2: { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
+    step3: { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step12: { control: "More control", freeTeam: "Free up the team", opportunities: "Not miss opportunities", processes: "Tidy processes", scale: "Scale without breaking" },
+  },
+  es: {
+    step1: { roleCeo: "CEO / fundador", roleDireccion: "Dirección", roleOps: "Operaciones", roleTech: "Tecnología", roleOtro: "Otro" },
+    step2: { e1_10: "1–10", e11_50: "11–50", e51_200: "51–200", e200: "+200" },
+    step3: { c1_10: "1–10", c11_50: "11–50", c51_200: "51–200", c201_1000: "201–1000", c1000: "+1000" },
+    step12: { control: "Tener más control", freeTeam: "Liberar al equipo", opportunities: "No perder oportunidades", processes: "Ordenar procesos", scale: "Escalar sin romper" },
+  },
+};
 
 function buildDiagnosticEmailHtml(p: {
   name: string; email: string; urgency: { value: number; level: string; color: string };
   role?: string; employees?: string; clients?: string; mainDisorder?: string;
   doubleClients?: string; profitVisibility?: string; opportunities?: string; absence?: string;
-  calendlyUrl: string;
+  calendlyUrl: string; lang?: "en" | "es";
 }): string {
   const { name, urgency, calendlyUrl: cal } = p;
-  const today = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  const lang = p.lang ?? "es";
+  const isEn = lang === "en";
+
+  const tr = (step: string, key?: string): string =>
+    key ? (DIAG_LABELS[lang][step]?.[key] ?? key) : "";
+
+  const locale = isEn ? "en-GB" : "es-ES";
+  const today = new Date().toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
   const barWidth = `${urgency.value}%`;
+
+  const labelRole      = isEn ? "Role"           : "Rol";
+  const labelEmployees = isEn ? "Employees"       : "Empleados";
+  const labelClients   = isEn ? "Active clients"  : "Clientes activos";
+  const labelPriority  = isEn ? "Main priority"   : "Prioridad principal";
+  const labelUrgency   = isEn ? "URGENCY LEVEL"   : "NIVEL DE URGENCIA";
+  const labelDetected  = isEn ? "DETECTED LEVEL"  : "NIVEL DETECTADO";
+  const labelOf100     = isEn ? "of 100"          : "de 100";
+  const labelProfile   = isEn ? "YOUR PROFILE"    : "TU PERFIL";
+  const labelTitle     = isEn ? "Business Diagnosis" : "Diagnóstico Empresarial";
+  const labelPrepared  = isEn ? "Prepared for"    : "Preparado para";
+  const labelCta       = isEn
+    ? "Book your free strategy session"
+    : "Agenda tu sesión estratégica gratuita";
+  const labelCtaSub    = isEn
+    ? "30 minutes to design your action plan · No commitment · Results in 48h"
+    : "30 minutos para diseñar tu plan de acción · Sin compromiso · Resultados en 48h";
+  const labelFooter    = isEn
+    ? "* This diagnosis is based on your responses and industry benchmarks. It is a guidance tool to help you identify areas for improvement."
+    : "* Este diagnóstico está basado en tus respuestas y benchmarks del sector. Es una herramienta orientativa para ayudarte a identificar áreas de mejora.";
+  const subjectPreview = isEn
+    ? `${name ? esc(name) + ", your" : "Your"} business diagnosis is ready`
+    : `${name ? esc(name) + ", tu" : "Tu"} diagnóstico empresarial está listo`;
+
   const profileRows = [
-    p.role && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Rol</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.role)}</td></tr>`,
-    p.employees && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Empleados</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.employees)}</td></tr>`,
-    p.clients && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Clientes activos</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.clients)}</td></tr>`,
-    p.mainDisorder && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Prioridad principal</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.mainDisorder)}</td></tr>`,
+    p.role      && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">${labelRole}</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(tr("step1", p.role))}</td></tr>`,
+    p.employees && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">${labelEmployees}</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(tr("step2", p.employees))}</td></tr>`,
+    p.clients   && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">${labelClients}</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(tr("step3", p.clients))}</td></tr>`,
+    p.mainDisorder && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">${labelPriority}</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(tr("step12", p.mainDisorder))}</td></tr>`,
   ].filter(Boolean).join("");
 
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnóstico Empresarial</title></head>
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${labelTitle}</title></head>
 <body style="margin:0;padding:0;background:#F5F5F5;font-family:'Helvetica Neue',Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:40px 20px;">
 <tr><td align="center">
@@ -255,13 +311,13 @@ function buildDiagnosticEmailHtml(p: {
   <!-- Header -->
   <tr><td style="padding:20px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA;">
     <table width="100%"><tr>
-      <td style="font-size:11px;color:#999;">Vista previa del email</td>
+      <td style="font-size:11px;color:#999;">${isEn ? "Email preview" : "Vista previa del email"}</td>
       <td align="right" style="font-size:11px;color:#ccc;">${today}</td>
     </tr><tr>
       <td colspan="2" style="padding-top:8px;font-size:11px;color:#aaa;">
-        Para: ${esc(p.email)}<br>
-        De: info@theaibusiness.com<br>
-        <span style="color:#555;font-weight:500;">Asunto: ${name ? esc(name) + ", tu" : "Tu"} diagnóstico empresarial está listo</span>
+        ${isEn ? "To" : "Para"}: ${esc(p.email)}<br>
+        ${isEn ? "From" : "De"}: info@theaibusiness.com<br>
+        <span style="color:#555;font-weight:500;">${isEn ? "Subject" : "Asunto"}: ${subjectPreview}</span>
       </td>
     </tr></table>
   </td></tr>
@@ -269,18 +325,18 @@ function buildDiagnosticEmailHtml(p: {
   <tr><td style="padding:40px 32px;">
     <!-- Brand -->
     <p style="margin:0 0 8px;font-size:10px;color:#ccc;letter-spacing:0.2em;text-align:center;">THE AI BUSINESS</p>
-    <h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#0B0B0B;text-align:center;">Diagnóstico Empresarial</h1>
-    <p style="margin:0 0 40px;font-size:13px;color:#999;text-align:center;">Preparado para <strong style="color:#0B0B0B;">${name ? esc(name) : "tu negocio"}</strong> · ${today}</p>
+    <h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#0B0B0B;text-align:center;">${labelTitle}</h1>
+    <p style="margin:0 0 40px;font-size:13px;color:#999;text-align:center;">${labelPrepared} <strong style="color:#0B0B0B;">${name ? esc(name) : (isEn ? "your business" : "tu negocio")}</strong> · ${today}</p>
 
     <!-- Urgency -->
-    <p style="margin:0 0 16px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">NIVEL DE URGENCIA</p>
+    <p style="margin:0 0 16px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">${labelUrgency}</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid ${urgency.color};border-radius:12px;padding:0;margin-bottom:32px;">
     <tr><td style="padding:24px;">
       <table width="100%"><tr>
-        <td><p style="margin:0;font-size:10px;color:#aaa;letter-spacing:0.1em;">NIVEL DETECTADO</p>
+        <td><p style="margin:0;font-size:10px;color:#aaa;letter-spacing:0.1em;">${labelDetected}</p>
             <p style="margin:4px 0 0;font-size:22px;font-weight:700;color:${urgency.color};">${esc(urgency.level)}</p></td>
         <td align="right"><span style="display:inline-block;padding:8px 20px;border-radius:999px;background:${urgency.color}20;color:${urgency.color};font-size:20px;font-weight:700;">${urgency.value}</span>
-            <p style="margin:4px 0 0;font-size:10px;color:#ccc;text-align:right;">de 100</p></td>
+            <p style="margin:4px 0 0;font-size:10px;color:#ccc;text-align:right;">${labelOf100}</p></td>
       </tr></table>
       <!-- Bar -->
       <div style="height:10px;background:#F0F0F0;border-radius:999px;margin:20px 0;overflow:hidden;">
@@ -290,23 +346,22 @@ function buildDiagnosticEmailHtml(p: {
 
     ${profileRows ? `
     <!-- Profile -->
-    <p style="margin:0 0 12px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">TU PERFIL</p>
+    <p style="margin:0 0 12px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">${labelProfile}</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #F0F0F0;border-radius:10px;margin-bottom:32px;">
     <tr><td style="padding:16px;"><table width="100%">${profileRows}</table></td></tr>
     </table>` : ""}
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:32px;">
-      <a href="${cal || "https://theaibusiness.com/#contacto"}" style="display:inline-block;padding:16px 36px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:15px;font-weight:500;">Agenda tu sesión estratégica gratuita</a>
-      <p style="margin:16px 0 0;font-size:11px;color:#aaa;">30 minutos para diseñar tu plan de acción · Sin compromiso · Resultados en 48h</p>
+      <a href="${cal || "https://theaibusiness.com/#contacto"}" style="display:inline-block;padding:16px 36px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:15px;font-weight:500;">${labelCta}</a>
+      <p style="margin:16px 0 0;font-size:11px;color:#aaa;">${labelCtaSub}</p>
     </div>
 
     <!-- Footer -->
     <div style="border-top:1px solid #F0F0F0;padding-top:20px;text-align:center;">
       <p style="margin:0;font-size:10px;color:#ccc;line-height:1.8;">
         The AI Business · info@theaibusiness.com<br>
-        * Este diagnóstico está basado en tus respuestas y benchmarks del sector.<br>
-        Es una herramienta orientativa para ayudarte a identificar áreas de mejora.
+        ${labelFooter}
       </p>
     </div>
   </td></tr>
@@ -323,8 +378,11 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
       role, employees, clients, upselling, memoryDecisions, absence,
       lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
       sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
-      calc,
+      calc, lang: rawDiagLang,
     } = req.body;
+
+    const diagLang = rawDiagLang === "en" ? "en" as const : "es" as const;
+    const isEnDiag = diagLang === "en";
 
     const emailStr = typeof email === "string" ? email.trim() : "";
     if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
@@ -332,17 +390,22 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
     }
 
     const sName = esc(name || "");
-    const urgency = computeUrgencyScore({ clients, upselling, memoryDecisions, absence, lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder });
+    const urgency = computeUrgencyScore({ clients, upselling, memoryDecisions, absence, lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder }, diagLang);
 
     // Email to user
     const userHtml = buildDiagnosticEmailHtml({
       name: sName, email: emailStr, urgency,
       role, employees, clients, mainDisorder, doubleClients, profitVisibility, opportunities, absence,
-      calendlyUrl: calendlyUrl(),
+      calendlyUrl: calendlyUrl(), lang: diagLang,
     });
+
+    const diagSubject = isEnDiag
+      ? `${sName ? sName + ", your" : "Your"} business diagnosis is ready`
+      : `${sName ? sName + ", tu" : "Tu"} diagnóstico empresarial está listo`;
+
     await sgMail.send({
       to: emailStr, from: from(),
-      subject: `${sName ? sName + ", tu" : "Tu"} diagnóstico empresarial está listo`,
+      subject: diagSubject,
       html: userHtml,
     });
 

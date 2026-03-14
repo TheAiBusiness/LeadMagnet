@@ -633,7 +633,7 @@ const DOUBLE_KEYS = ["ok", "adjustments", "complicated", "break"] as const;
 const DISORDER_KEYS = ["control", "freeTeam", "opportunities", "processes", "scale"] as const;
 
 export function Calculator({ id }: CalculatorProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const TOTAL_STEPS = 13; // 12 preguntas + 1 captura email
   const [step, setStep] = useState(0); // Empezamos en 0 para la pantalla inicial
   const [dir, setDir] = useState(1);
@@ -1293,7 +1293,7 @@ export function Calculator({ id }: CalculatorProps) {
           role, employees, clients, upselling, memoryDecisions, absence,
           lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
           sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
-          calc,
+          calc, lang: i18n.language,
         }),
       });
       if (!res.ok) {
