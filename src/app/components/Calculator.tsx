@@ -671,6 +671,7 @@ export function Calculator({ id }: CalculatorProps) {
   const [priority, setPriority] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [done, setDone] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
@@ -1289,7 +1290,7 @@ export function Calculator({ id }: CalculatorProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, email,
+          name, email, phone,
           role, employees, clients, upselling, memoryDecisions, absence,
           lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
           sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
@@ -1337,6 +1338,7 @@ export function Calculator({ id }: CalculatorProps) {
     setPriority("");
     setName("");
     setEmail("");
+    setPhone("");
     setDone(false);
     setSending(false);
     setErr("");
@@ -2751,6 +2753,37 @@ export function Calculator({ id }: CalculatorProps) {
                           )}
                         </AnimatePresence>
                       </motion.div>
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          filter: "blur(10px)",
+                          y: 10,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          filter: "blur(0px)",
+                          y: 0,
+                        }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.46,
+                        }}
+                      >
+                        <input
+                          type="tel"
+                          placeholder={t("calc.phonePlaceholder")}
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && submit()
+                          }
+                          className="w-full px-0 py-3 bg-transparent border-b-2 border-[#E8E8E8] focus:border-[#0B0B0B] focus:outline-none transition-colors duration-300 placeholder:text-[#0B0B0B]/20 text-[#0B0B0B]"
+                          style={{
+                            fontSize: "1.3rem",
+                            fontWeight: 400,
+                          }}
+                        />
+                      </motion.div>
                       <motion.button
                         onClick={submit}
                         disabled={sending}
@@ -2766,7 +2799,7 @@ export function Calculator({ id }: CalculatorProps) {
                         }}
                         transition={{
                           duration: 0.5,
-                          delay: 0.46,
+                          delay: 0.54,
                         }}
                         whileHover={!sending ? {
                           scale: 1.02,
@@ -2787,7 +2820,7 @@ export function Calculator({ id }: CalculatorProps) {
                         animate={{ opacity: 1 }}
                         transition={{
                           duration: 0.5,
-                          delay: 0.55,
+                          delay: 0.63,
                         }}
                         className="text-[#0B0B0B]/20 text-center"
                         style={{ fontSize: "0.68rem" }}
