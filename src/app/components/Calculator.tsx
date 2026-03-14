@@ -2891,6 +2891,7 @@ export function Calculator({ id }: CalculatorProps) {
                     >
                       Reservar llamada
                     </motion.a>
+                    <div className="hidden">
                     <motion.button
                       onClick={downloadPDF}
                       disabled={downloading}
@@ -2926,6 +2927,7 @@ export function Calculator({ id }: CalculatorProps) {
                         ? "Generando..."
                         : "Descargar PDF"}
                     </motion.button>
+                    </div>
                   </motion.div>
 
                   {/* ── Scroll hint ── */}
@@ -2999,6 +3001,7 @@ export function Calculator({ id }: CalculatorProps) {
               <ArrowLeft size={16} /> Anterior
             </motion.button>
             {(step === 5 || step === 6 || step === 7) && (
+              <div className="hidden">
               <motion.button
                 onClick={next}
                 disabled={!canNext()}
@@ -3021,6 +3024,7 @@ export function Calculator({ id }: CalculatorProps) {
               >
                 Siguiente <ArrowRight size={16} />
               </motion.button>
+              </div>
             )}
           </motion.div>
         )}
