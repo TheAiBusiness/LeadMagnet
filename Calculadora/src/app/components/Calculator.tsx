@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useMemo,
   useCallback,
@@ -24,7 +24,6 @@ import {
   Download,
 } from "lucide-react";
 import { EmailReport } from "./EmailReport";
-import { API_BASE, CALENDLY_URL } from "../lib/constants";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -657,7 +656,6 @@ export function Calculator({ id }: CalculatorProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
-  const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
 
   /* PDF download */
@@ -1258,7 +1256,7 @@ export function Calculator({ id }: CalculatorProps) {
     if (step === 12) return !!mainDisorder;
     return true;
   };
-  const submit = async () => {
+  const submit = () => {
     setErr("");
     if (
       !email ||
@@ -1268,30 +1266,7 @@ export function Calculator({ id }: CalculatorProps) {
       setErr("Email no válido");
       return;
     }
-    setSending(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/send-diagnostic`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name, email,
-          role, employees, clients, upselling, memoryDecisions, absence,
-          lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
-          sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
-          calc,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setErr((data as { error?: string }).error || "Error al enviar. Inténtalo de nuevo.");
-        return;
-      }
-      setDone(true);
-    } catch {
-      setErr("Error de conexión. Inténtalo de nuevo.");
-    } finally {
-      setSending(false);
-    }
+    setDone(true);
   };
   const reset = () => {
     setStep(0);
@@ -1323,7 +1298,6 @@ export function Calculator({ id }: CalculatorProps) {
     setName("");
     setEmail("");
     setDone(false);
-    setSending(false);
     setErr("");
   };
 
@@ -2738,7 +2712,6 @@ export function Calculator({ id }: CalculatorProps) {
                       </motion.div>
                       <motion.button
                         onClick={submit}
-                        disabled={sending}
                         initial={{
                           opacity: 0,
                           filter: "blur(10px)",
@@ -2753,19 +2726,19 @@ export function Calculator({ id }: CalculatorProps) {
                           duration: 0.5,
                           delay: 0.46,
                         }}
-                        whileHover={!sending ? {
+                        whileHover={{
                           scale: 1.02,
                           boxShadow:
                             "0 8px 35px rgba(11,11,11,0.15)",
-                        } : {}}
-                        whileTap={!sending ? { scale: 0.97 } : {}}
-                        className={`w-full py-4 mt-4 bg-[#0B0B0B] text-white rounded-full shadow-[0_4px_20px_rgba(11,11,11,0.08)] transition-opacity ${sending ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+                        }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-4 mt-4 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)]"
                         style={{
                           fontSize: "1.05rem",
                           fontWeight: 500,
                         }}
                       >
-                        {sending ? "Enviando…" : "Desbloquear informe"}
+                        Desbloquear informe
                       </motion.button>
                       <motion.p
                         initial={{ opacity: 0 }}
@@ -2873,24 +2846,21 @@ export function Calculator({ id }: CalculatorProps) {
                     transition={{ duration: 0.5, delay: 0.5 }}
                     className="flex flex-wrap gap-3 mb-10"
                   >
-                    <motion.a
-                      href={CALENDLY_URL || "/#contacto"}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <motion.button
                       whileHover={{
                         scale: 1.03,
                         boxShadow:
                           "0 8px 30px rgba(11,11,11,0.12)",
                       }}
                       whileTap={{ scale: 0.97 }}
-                      className="px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)] no-underline"
+                      className="px-8 py-3.5 bg-[#0B0B0B] text-white rounded-full cursor-pointer shadow-[0_4px_20px_rgba(11,11,11,0.08)]"
                       style={{
                         fontSize: "0.95rem",
                         fontWeight: 500,
                       }}
                     >
                       Reservar llamada
-                    </motion.a>
+                    </motion.button>
                     <motion.button
                       onClick={downloadPDF}
                       disabled={downloading}

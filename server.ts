@@ -208,6 +208,199 @@ app.post("/api/send-report", rateLimit, async (req, res) => {
 });
 
 // ═══════════════════════════════════
+// POST /api/send-diagnostic
+// ═══════════════════════════════════
+function computeUrgencyScore(d: Record<string, string>) {
+  let score = 0;
+  if (d.clients === "+1000") score += 3; else if (d.clients === "201–1000") score += 2; else if (d.clients === "51–200") score += 1;
+  if (d.upselling === "No realmente") score += 3; else if (d.upselling === "Muy poco") score += 2.5; else if (d.upselling === "Algunas veces") score += 1;
+  if (d.memoryDecisions === "Demasiadas veces") score += 4; else if (d.memoryDecisions === "Bastante a menudo") score += 3; else if (d.memoryDecisions === "A veces") score += 1.5;
+  if (d.absence === "Depende de mí") score += 4; else if (d.absence === "Se ralentizaría") score += 3; else if (d.absence === "Habría ajustes") score += 1.5;
+  if (d.lostTime === "Demasiado") score += 3; else if (d.lostTime === "Bastante") score += 2; else if (d.lostTime === "A veces") score += 1;
+  if (d.manualWork === "Demasiado") score += 3; else if (d.manualWork === "Bastante") score += 2; else if (d.manualWork === "Algo") score += 1;
+  if (d.profitVisibility === "No lo sabemos") score += 4; else if (d.profitVisibility === "Lo intuimos") score += 3; else if (d.profitVisibility === "Más o menos") score += 1.5;
+  if (d.opportunities === "Solemos llegar tarde") score += 3.5; else if (d.opportunities === "Nos cuesta reaccionar") score += 2.5; else if (d.opportunities === "A veces llegamos") score += 1;
+  if (d.doubleClients === "Se rompería") score += 4; else if (d.doubleClients === "Se complicaría") score += 3; else if (d.doubleClients === "Con algunos ajustes") score += 1.5;
+  if (d.mainDisorder === "Escalar sin romper") score += 3.5; else if (d.mainDisorder === "No perder oportunidades") score += 3; else if (d.mainDisorder === "Ordenar procesos") score += 2.5; else if (d.mainDisorder === "Liberar al equipo") score += 2; else if (d.mainDisorder === "Tener más control") score += 1.5;
+  const value = Math.min(Math.round((score / 37) * 100), 100);
+  let level: string, color: string;
+  if (value >= 65) { level = "MUY GRAVE"; color = "#DC2626"; }
+  else if (value >= 45) { level = "URGENTE"; color = "#EA580C"; }
+  else if (value >= 25) { level = "ATENCIÓN NECESARIA"; color = "#F59E0B"; }
+  else { level = "BIEN POSICIONADO"; color = "#10B981"; }
+  return { value, level, color };
+}
+
+function buildDiagnosticEmailHtml(p: {
+  name: string; email: string; urgency: { value: number; level: string; color: string };
+  role?: string; employees?: string; clients?: string; mainDisorder?: string;
+  doubleClients?: string; profitVisibility?: string; opportunities?: string; absence?: string;
+  calendlyUrl: string;
+}): string {
+  const { name, urgency, calendlyUrl: cal } = p;
+  const today = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  const barWidth = `${urgency.value}%`;
+  const profileRows = [
+    p.role && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Rol</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.role)}</td></tr>`,
+    p.employees && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Empleados</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.employees)}</td></tr>`,
+    p.clients && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Clientes activos</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.clients)}</td></tr>`,
+    p.mainDisorder && `<tr><td style="color:#999;font-size:12px;padding:4px 0;">Prioridad principal</td><td style="font-size:13px;font-weight:500;color:#0B0B0B;">${esc(p.mainDisorder)}</td></tr>`,
+  ].filter(Boolean).join("");
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnóstico Empresarial</title></head>
+<body style="margin:0;padding:0;background:#F5F5F5;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.06);">
+  <!-- Header -->
+  <tr><td style="padding:20px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA;">
+    <table width="100%"><tr>
+      <td style="font-size:11px;color:#999;">Vista previa del email</td>
+      <td align="right" style="font-size:11px;color:#ccc;">${today}</td>
+    </tr><tr>
+      <td colspan="2" style="padding-top:8px;font-size:11px;color:#aaa;">
+        Para: ${esc(p.email)}<br>
+        De: info@theaibusiness.com<br>
+        <span style="color:#555;font-weight:500;">Asunto: ${name ? esc(name) + ", tu" : "Tu"} diagnóstico empresarial está listo</span>
+      </td>
+    </tr></table>
+  </td></tr>
+  <!-- Body -->
+  <tr><td style="padding:40px 32px;">
+    <!-- Brand -->
+    <p style="margin:0 0 8px;font-size:10px;color:#ccc;letter-spacing:0.2em;text-align:center;">THE AI BUSINESS</p>
+    <h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#0B0B0B;text-align:center;">Diagnóstico Empresarial</h1>
+    <p style="margin:0 0 40px;font-size:13px;color:#999;text-align:center;">Preparado para <strong style="color:#0B0B0B;">${name ? esc(name) : "tu negocio"}</strong> · ${today}</p>
+
+    <!-- Urgency -->
+    <p style="margin:0 0 16px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">NIVEL DE URGENCIA</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid ${urgency.color};border-radius:12px;padding:0;margin-bottom:32px;">
+    <tr><td style="padding:24px;">
+      <table width="100%"><tr>
+        <td><p style="margin:0;font-size:10px;color:#aaa;letter-spacing:0.1em;">NIVEL DETECTADO</p>
+            <p style="margin:4px 0 0;font-size:22px;font-weight:700;color:${urgency.color};">${esc(urgency.level)}</p></td>
+        <td align="right"><span style="display:inline-block;padding:8px 20px;border-radius:999px;background:${urgency.color}20;color:${urgency.color};font-size:20px;font-weight:700;">${urgency.value}</span>
+            <p style="margin:4px 0 0;font-size:10px;color:#ccc;text-align:right;">de 100</p></td>
+      </tr></table>
+      <!-- Bar -->
+      <div style="height:10px;background:#F0F0F0;border-radius:999px;margin:20px 0;overflow:hidden;">
+        <div style="height:10px;width:${barWidth};background:${urgency.color};border-radius:999px;"></div>
+      </div>
+    </td></tr></table>
+
+    ${profileRows ? `
+    <!-- Profile -->
+    <p style="margin:0 0 12px;font-size:10px;color:#aaa;letter-spacing:0.18em;text-align:center;border-top:1px solid #EBEBEB;padding-top:16px;">TU PERFIL</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #F0F0F0;border-radius:10px;margin-bottom:32px;">
+    <tr><td style="padding:16px;"><table width="100%">${profileRows}</table></td></tr>
+    </table>` : ""}
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="${cal || "https://theaibusiness.com/#contacto"}" style="display:inline-block;padding:16px 36px;background:#0B0B0B;color:#fff;text-decoration:none;border-radius:999px;font-size:15px;font-weight:500;">Agenda tu sesión estratégica gratuita</a>
+      <p style="margin:16px 0 0;font-size:11px;color:#aaa;">30 minutos para diseñar tu plan de acción · Sin compromiso · Resultados en 48h</p>
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #F0F0F0;padding-top:20px;text-align:center;">
+      <p style="margin:0;font-size:10px;color:#ccc;line-height:1.8;">
+        The AI Business · info@theaibusiness.com<br>
+        * Este diagnóstico está basado en tus respuestas y benchmarks del sector.<br>
+        Es una herramienta orientativa para ayudarte a identificar áreas de mejora.
+      </p>
+    </div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
+app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
+  if (!setupSG()) return res.status(500).json({ error: "SendGrid not configured" });
+  try {
+    const {
+      name, email,
+      role, employees, clients, upselling, memoryDecisions, absence,
+      lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
+      sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
+      calc,
+    } = req.body;
+
+    const emailStr = typeof email === "string" ? email.trim() : "";
+    if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
+      return res.status(400).json({ error: "Email válido requerido" });
+    }
+
+    const sName = esc(name || "");
+    const urgency = computeUrgencyScore({ clients, upselling, memoryDecisions, absence, lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder });
+
+    // Email to user
+    const userHtml = buildDiagnosticEmailHtml({
+      name: sName, email: emailStr, urgency,
+      role, employees, clients, mainDisorder, doubleClients, profitVisibility, opportunities, absence,
+      calendlyUrl: calendlyUrl(),
+    });
+    await sgMail.send({
+      to: emailStr, from: from(),
+      subject: `${sName ? sName + ", tu" : "Tu"} diagnóstico empresarial está listo`,
+      html: userHtml,
+    });
+
+    // Internal notification
+    try {
+      await sgMail.send({
+        to: notify(), from: from(),
+        subject: `🔔 Diagnóstico: ${sName || "Anónimo"} — ${urgency.level} (${urgency.value}/100)`,
+        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailStr)}\nUrgencia: ${urgency.level} (${urgency.value}/100)\n\nRol: ${esc(role)}\nEmpleados: ${esc(employees)}\nClientes: ${esc(clients)}\nUpselling: ${esc(upselling)}\nDecisiones por memoria: ${esc(memoryDecisions)}\nAusencia: ${esc(absence)}\nTiempo perdido: ${esc(lostTime)}\nTrabajo manual: ${esc(manualWork)}\nVisibilidad rentab.: ${esc(profitVisibility)}\nOportunidades: ${esc(opportunities)}\nDuplicar clientes: ${esc(doubleClients)}\nDesorden principal: ${esc(mainDisorder)}\n\nSector: ${esc(sector)}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}</pre>`,
+      });
+    } catch (notifyErr) {
+      console.error("Notification email failed (non-blocking):", notifyErr);
+    }
+
+    // Save to Supabase
+    const sb = setupSupabase();
+    if (sb) {
+      try {
+        const p_payload = {
+          name: name || null, email: emailStr,
+          role, employees, clients, upselling, memoryDecisions, absence,
+          lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
+          sector, teamSize, revenue,
+          usesAI: usesAI ?? null,
+          tasks: tasks || [],
+          hours: Number(hours) || 0, costH: Number(costH) || 0,
+          leads: Number(leads) || 0, respTime: Number(respTime) || 0, avgTicket: Number(avgTicket) || 0,
+          h24: h24 ?? null, priority: priority || "",
+          createdAt: new Date().toISOString(),
+          urgency,
+          calc: calc ? {
+            hrsSaved: Number(calc.hrsSaved) || 0,
+            monthlySav: Number(calc.monthlySav) || 0,
+            addRev: Number(calc.addRev) || 0,
+            newResp: Number(calc.newResp) || 0,
+            respImprove: Number(calc.respImprove) || 0,
+            score: Number(calc.score) || 0,
+            total: Number(calc.total) || 0,
+            annual: Number(calc.annual) || 0,
+            avgTicket: Number(calc.avgTicket) || Number(avgTicket) || 0,
+          } : null,
+        };
+        const { error: dbErr } = await sb.rpc("submit_ai_report", { p_payload, p_meta: {} });
+        if (dbErr) console.error("Supabase submit_ai_report error:", dbErr.message);
+      } catch (dbEx) {
+        console.error("Supabase submit_ai_report error:", dbEx);
+      }
+    }
+
+    res.json({ ok: true });
+  } catch (err: unknown) {
+    console.error("send-diagnostic error:", err);
+    if (err instanceof Error) console.error("Stack:", err.stack);
+    res.status(500).json({ error: "Failed to send. Please try again later." });
+  }
+});
+
+// ═══════════════════════════════════
 // POST /api/send-contact
 // ═══════════════════════════════════
 app.post("/api/send-contact", rateLimit, async (req, res) => {

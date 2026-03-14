@@ -332,7 +332,7 @@ export function EmailReport({
               <span className="text-[#0B0B0B]/25">Para:</span> {email}
             </p>
             <p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}>
-              <span className="text-[#0B0B0B]/25">De:</span> info@theaibusiness.com
+              <span className="text-[#0B0B0B]/25">De:</span> hola@theaibusiness.io
             </p>
             <p className="text-[#0B0B0B]/40" style={{ fontSize: "0.62rem" }}>
               <span className="text-[#0B0B0B]/25">Asunto:</span>{" "}
@@ -767,7 +767,7 @@ export function EmailReport({
               className="text-[#0B0B0B]/15"
               style={{ fontSize: "0.55rem", lineHeight: 1.6 }}
             >
-              The AI Business · info@theaibusiness.com
+              The AI Business · hola@theaibusiness.io
               <br />* Este diagnóstico está basado en tus respuestas y
               benchmarks del sector.
               <br />

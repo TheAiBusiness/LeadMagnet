@@ -1,6 +1,5 @@
-import React from "react";
 import { motion } from "motion/react";
-import logoImg from "@/assets/dd0f90164673663df94faa349662ec5a4dc60874.png";
+import logoImg from "figma:asset/dd0f90164673663df94faa349662ec5a4dc60874.png";
 import { Calculator } from "./Calculator";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
