@@ -390,7 +390,7 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
   if (!setupSG()) return res.status(500).json({ error: "SendGrid not configured" });
   try {
     const {
-      name, email,
+      name, email, phone,
       role, employees, clients, upselling, memoryDecisions, absence,
       lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
       sector, teamSize, revenue, usesAI, tasks, hours, costH, leads, respTime, avgTicket, h24, priority,
@@ -431,7 +431,7 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
       await sgMail.send({
         to: notify(), from: from(),
         subject: `🔔 Diagnóstico: ${sName || "Anónimo"} — ${urgency.level} (${urgency.value}/100)`,
-        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailStr)}\nUrgencia: ${urgency.level} (${urgency.value}/100)\n\nRol: ${tl("step1", role)}\nEmpleados: ${tl("step2", employees)}\nClientes: ${tl("step3", clients)}\nUpselling: ${tl("step4", upselling)}\nDecisiones por memoria: ${tl("step5", memoryDecisions)}\nAusencia: ${tl("step6", absence)}\nTiempo perdido: ${tl("step7", lostTime)}\nTrabajo manual: ${tl("step8", manualWork)}\nVisibilidad rentab.: ${tl("step9", profitVisibility)}\nOportunidades: ${tl("step10", opportunities)}\nDuplicar clientes: ${tl("step11", doubleClients)}\nDesorden principal: ${tl("step12", mainDisorder)}\n\nSector: ${esc(sector)}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}</pre>`,
+        html: `<pre style="font-size:13px;line-height:1.8;">Nombre: ${sName || "-"}\nEmail: ${esc(emailStr)}\nTeléfono: ${phone ? esc(phone) : "-"}\nUrgencia: ${urgency.level} (${urgency.value}/100)\n\nRol: ${tl("step1", role)}\nEmpleados: ${tl("step2", employees)}\nClientes: ${tl("step3", clients)}\nUpselling: ${tl("step4", upselling)}\nDecisiones por memoria: ${tl("step5", memoryDecisions)}\nAusencia: ${tl("step6", absence)}\nTiempo perdido: ${tl("step7", lostTime)}\nTrabajo manual: ${tl("step8", manualWork)}\nVisibilidad rentab.: ${tl("step9", profitVisibility)}\nOportunidades: ${tl("step10", opportunities)}\nDuplicar clientes: ${tl("step11", doubleClients)}\nDesorden principal: ${tl("step12", mainDisorder)}\n\nSector: ${esc(sector)}\nEquipo: ${esc(teamSize)}\nFacturación: ${esc(revenue)}</pre>`,
       });
     } catch (notifyErr) {
       console.error("Notification email failed (non-blocking):", notifyErr);
@@ -442,7 +442,7 @@ app.post("/api/send-diagnostic", rateLimit, async (req, res) => {
     if (sb) {
       try {
         const p_payload = {
-          name: name || null, email: emailStr,
+          name: name || null, email: emailStr, phone: phone || null,
           role, employees, clients, upselling, memoryDecisions, absence,
           lostTime, manualWork, profitVisibility, opportunities, doubleClients, mainDisorder,
           sector, teamSize, revenue,
