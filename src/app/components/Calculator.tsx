@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   motion,
   AnimatePresence,
@@ -618,7 +619,21 @@ interface CalculatorProps {
   id?: string;
 }
 
+const ROLE_KEYS = ["roleCeo", "roleDireccion", "roleOps", "roleTech", "roleOtro"] as const;
+const EMPLOYEE_KEYS = ["e1_10", "e11_50", "e51_200", "e200"] as const;
+const CLIENT_KEYS = ["c1_10", "c11_50", "c51_200", "c201_1000", "c1000"] as const;
+const UPSELL_KEYS = ["yesClear", "sometimes", "little", "no"] as const;
+const MEMORY_KEYS = ["rarely", "sometimes", "often", "tooMany"] as const;
+const ABSENCE_KEYS = ["same", "adjustments", "slowdown", "depends"] as const;
+const LOSTTIME_KEYS = ["rarely", "sometimes", "quite", "tooMuch"] as const;
+const MANUAL_KEYS = ["almostNone", "some", "quite", "tooMuch"] as const;
+const PROFIT_KEYS = ["yesClear", "moreOrLess", "intuition", "dontKnow"] as const;
+const OPPORTUNITY_KEYS = ["fast", "sometimes", "hard", "late"] as const;
+const DOUBLE_KEYS = ["ok", "adjustments", "complicated", "break"] as const;
+const DISORDER_KEYS = ["control", "freeTeam", "opportunities", "processes", "scale"] as const;
+
 export function Calculator({ id }: CalculatorProps) {
+  const { t } = useTranslation();
   const TOTAL_STEPS = 13; // 12 preguntas + 1 captura email
   const [step, setStep] = useState(0); // Empezamos en 0 para la pantalla inicial
   const [dir, setDir] = useState(1);
@@ -1265,7 +1280,7 @@ export function Calculator({ id }: CalculatorProps) {
       !email.includes("@") ||
       !email.includes(".")
     ) {
-      setErr("Email no válido");
+      setErr(t("calculator.invalidEmail"));
       return;
     }
     setSending(true);
@@ -1418,9 +1433,9 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.2,
                     }}
                   >
-                    <span className="text-[#0B0B0B]/40">Hay demasiado humo cuando se habla de IA.</span>
-                    {" "}Nosotros no venimos a vender humo. Venimos a mirar tu empresa con{" "}
-                    <span style={{ fontWeight: 700 }}>honestidad</span>.
+                    <span className="text-[#0B0B0B]/40">{t("calculator.step0.intro1")}</span>
+                    {" "}{t("calculator.step0.intro2")}{" "}
+                    <span style={{ fontWeight: 700 }}>{t("calculator.step0.honesty")}</span>.
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -1438,7 +1453,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.5,
                     }}
                   >
-                    Si tuvieras que <span className="text-[#0B0B0B]" style={{ fontWeight: 600 }}>curar</span> una parte de tu empresa hoy, ¿cuál sería?
+                    {t("calculator.step0.question")}
                   </motion.p>
                   <motion.button
                     onClick={next}
@@ -1468,7 +1483,7 @@ export function Calculator({ id }: CalculatorProps) {
                       fontWeight: 500,
                     }}
                   >
-                    Empezar diagnóstico
+                    {t("calculator.step0.cta")}
                   </motion.button>
                 </motion.div>
               )}
@@ -1501,7 +1516,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    01 / 12
+                    {t("calculator.step1.stepNum")}
                   </motion.p>
                   <motion.p
                     initial={{
@@ -1516,7 +1531,7 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-3"
                     style={{ fontSize: "0.9rem", lineHeight: 1.5 }}
                   >
-                    Antes de empezar, necesito entender desde dónde miras la empresa.
+                    {t("calculator.step1.intro")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1537,10 +1552,10 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Cuál es tu rol hoy?
+                    {t("calculator.step1.title")}
                   </motion.h2>
                   <div className="flex flex-wrap gap-2.5">
-                    {["CEO / fundador", "Dirección", "Operaciones", "Tecnología", "Otro"].map((r, i) => (
+                    {ROLE_KEYS.map((r, i) => (
                       <Pill
                         key={r}
                         active={role === r}
@@ -1552,7 +1567,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="role"
                       >
-                        {r}
+                        {t(`calculator.step1.${r}`)}
                       </Pill>
                     ))}
                   </div>
@@ -1587,7 +1602,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    02 / 12
+                    {t("calculator.step2.stepNum")}
                   </motion.p>
                   <motion.p
                     initial={{
@@ -1602,7 +1617,7 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-3"
                     style={{ fontSize: "0.9rem", lineHeight: 1.5 }}
                   >
-                    No es lo mismo ordenar una empresa de 5 personas que una de 200.
+                    {t("calculator.step2.intro")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1623,10 +1638,10 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Cuántas personas trabajan hoy en tu empresa?
+                    {t("calculator.step2.title")}
                   </motion.h2>
                   <div className="flex flex-wrap gap-2.5">
-                    {["1–10", "11–50", "51–200", "+200"].map((e, i) => (
+                    {EMPLOYEE_KEYS.map((e, i) => (
                       <Pill
                         key={e}
                         active={employees === e}
@@ -1638,7 +1653,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="employees"
                       >
-                        {e}
+                        {t(`calculator.step2.${e}`)}
                       </Pill>
                     ))}
                   </div>
@@ -1673,7 +1688,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    03 / 12
+                    {t("calculator.step3.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1694,10 +1709,10 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Cuántos clientes activos tiene hoy tu empresa?
+                    {t("calculator.step3.title")}
                   </motion.h2>
                   <div className="flex flex-wrap gap-2.5">
-                    {["1–10", "11–50", "51–200", "201–1000", "+1000"].map((c, i) => (
+                    {CLIENT_KEYS.map((c, i) => (
                       <Pill
                         key={c}
                         active={clients === c}
@@ -1709,7 +1724,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.2 + i * 0.04}
                         groupId="clients"
                       >
-                        {c}
+                        {t(`calculator.step3.${c}`)}
                       </Pill>
                     ))}
                   </div>
@@ -1744,7 +1759,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    04 / 12
+                    {t("calculator.step4.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1765,7 +1780,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Estás aprovechando de verdad las oportunidades de upselling o cross-selling?
+                    {t("calculator.step4.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -1780,10 +1795,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Muchas empresas tienen clientes. Menos empresas activan todo su potencial.
+                    {t("calculator.step4.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Sí, con sistema claro", "Algunas veces", "Muy poco", "No realmente"].map((u, i) => (
+                    {UPSELL_KEYS.map((u, i) => (
                       <Pill
                         key={u}
                         active={upselling === u}
@@ -1795,7 +1810,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="upselling"
                       >
-                        {u}
+                        {t(`calculator.step4.${u}`)}
                       </Pill>
                     ))}
                   </div>
@@ -1830,7 +1845,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    05 / 12
+                    {t("calculator.step5.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1851,7 +1866,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.2,
                     }}
                   >
-                    ¿Cuántas veces esta semana tomaste una decisión importante basándote en lo que recuerdas, y no en lo que sabes?
+                    {t("calculator.step5.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -1866,10 +1881,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Todos lo hacemos. El problema es cuando se convierte en el sistema.
+                    {t("calculator.step5.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Casi nunca", "A veces", "Bastante a menudo", "Demasiadas veces"].map((m, i) => (
+                    {MEMORY_KEYS.map((m, i) => (
                       <Pill
                         key={m}
                         active={memoryDecisions === m}
@@ -1881,7 +1896,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="memory"
                       >
-                        {m}
+                        {t(`calculator.step5.${m}`)}
                       </Pill>
                     ))}
                   </div>
@@ -1916,7 +1931,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    06 / 12
+                    {t("calculator.step6.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -1937,7 +1952,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    Si mañana te ausentaras dos semanas de la operativa…
+                    {t("calculator.step6.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -1952,10 +1967,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    No es un problema de las personas. Es cómo está construido el sistema.
+                    {t("calculator.step6.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Funcionaría igual", "Habría ajustes", "Se ralentizaría", "Depende de mí"].map((a, i) => (
+                    {ABSENCE_KEYS.map((a, i) => (
                       <Pill
                         key={a}
                         active={absence === a}
@@ -1967,7 +1982,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="absence"
                       >
-                        {a}
+                        {t(`calculator.step6.${a}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2002,7 +2017,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    07 / 12
+                    {t("calculator.step7.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2023,7 +2038,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Tu equipo pierde tiempo buscando información que ya existe?
+                    {t("calculator.step7.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2038,10 +2053,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    El conocimiento disperso es uno de los costes invisibles más caros de una empresa.
+                    {t("calculator.step7.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Casi nunca", "A veces", "Bastante", "Demasiado"].map((l, i) => (
+                    {LOSTTIME_KEYS.map((l, i) => (
                       <Pill
                         key={l}
                         active={lostTime === l}
@@ -2053,7 +2068,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="losttime"
                       >
-                        {l}
+                        {t(`calculator.step7.${l}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2088,7 +2103,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    08 / 12
+                    {t("calculator.step8.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2109,7 +2124,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¿Cuánto trabajo de tu equipo sigue haciéndose a mano?
+                    {t("calculator.step8.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2124,10 +2139,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Cuando algo no debería hacerse manualmente y sigue haciéndose así, el coste ya existe.
+                    {t("calculator.step8.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Casi nada", "Algo", "Bastante", "Demasiado"].map((w, i) => (
+                    {MANUAL_KEYS.map((w, i) => (
                       <Pill
                         key={w}
                         active={manualWork === w}
@@ -2139,7 +2154,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="manualwork"
                       >
-                        {w}
+                        {t(`calculator.step8.${w}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2174,7 +2189,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    09 / 12
+                    {t("calculator.step9.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2195,7 +2210,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.2,
                     }}
                   >
-                    ¿Tienes visibilidad clara de qué clientes, productos o servicios generan más rentabilidad?
+                    {t("calculator.step9.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2210,10 +2225,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Muchas empresas lo intuyen. Pocas lo ven con claridad.
+                    {t("calculator.step9.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Sí, con datos claros", "Más o menos", "Lo intuimos", "No lo sabemos"].map((p, i) => (
+                    {PROFIT_KEYS.map((p, i) => (
                       <Pill
                         key={p}
                         active={profitVisibility === p}
@@ -2225,7 +2240,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="profit"
                       >
-                        {p}
+                        {t(`calculator.step9.${p}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2260,7 +2275,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    10 / 12
+                    {t("calculator.step10.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2281,7 +2296,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    Cuando aparece una oportunidad de negocio…
+                    {t("calculator.step10.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2296,10 +2311,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Muchas oportunidades no se pierden por falta de interés, sino por falta de sistema.
+                    {t("calculator.step10.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["La ejecutamos rápido", "A veces llegamos", "Nos cuesta reaccionar", "Solemos llegar tarde"].map((o, i) => (
+                    {OPPORTUNITY_KEYS.map((o, i) => (
                       <Pill
                         key={o}
                         active={opportunities === o}
@@ -2311,7 +2326,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="opportunities"
                       >
-                        {o}
+                        {t(`calculator.step10.${o}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2346,7 +2361,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    11 / 12
+                    {t("calculator.step11.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2367,7 +2382,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    Si mañana duplicaras clientes o volumen…
+                    {t("calculator.step11.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2382,10 +2397,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    La mayoría de empresas crecen hasta el punto en que sus procesos las frenan.
+                    {t("calculator.step11.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Aguantaríamos bien", "Con algunos ajustes", "Se complicaría", "Se rompería"].map((d, i) => (
+                    {DOUBLE_KEYS.map((d, i) => (
                       <Pill
                         key={d}
                         active={doubleClients === d}
@@ -2397,7 +2412,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="double"
                       >
-                        {d}
+                        {t(`calculator.step11.${d}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2432,7 +2447,7 @@ export function Calculator({ id }: CalculatorProps) {
                       letterSpacing: "0.15em",
                     }}
                   >
-                    12 / 12
+                    {t("calculator.step12.stepNum")}
                   </motion.p>
                   <motion.h2
                     initial={{
@@ -2453,7 +2468,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.2,
                     }}
                   >
-                    Si pudieras resolver un solo desorden en tu empresa esta semana, ¿cuál sería?
+                    {t("calculator.step12.title")}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2468,10 +2483,10 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/35 mb-8"
                     style={{ fontSize: "0.85rem", lineHeight: 1.5 }}
                   >
-                    Esta es la más importante. Porque seguramente ya sabes la respuesta.
+                    {t("calculator.step12.sub")}
                   </motion.p>
                   <div className="flex flex-wrap gap-2.5">
-                    {["Tener más control", "Liberar al equipo", "No perder oportunidades", "Ordenar procesos", "Escalar sin romper"].map((dis, i) => (
+                    {DISORDER_KEYS.map((dis, i) => (
                       <Pill
                         key={dis}
                         active={mainDisorder === dis}
@@ -2483,7 +2498,7 @@ export function Calculator({ id }: CalculatorProps) {
                         delay={0.25 + i * 0.04}
                         groupId="disorder"
                       >
-                        {dis}
+                        {t(`calculator.step12.${dis}`)}
                       </Pill>
                     ))}
                   </div>
@@ -2514,22 +2529,22 @@ export function Calculator({ id }: CalculatorProps) {
                     <div className="space-y-4 mb-5">
                       {[
                         {
-                          label: "Ahorro / mes",
+                          label: t("calculator.savingsMonth"),
                           icon: Euro,
                           val: `€ ${fmt(calc.monthlySav)}`,
                         },
                         {
-                          label: "Ingreso adicional",
+                          label: t("calculator.additionalRev"),
                           icon: TrendingUp,
                           val: `€ ${fmt(calc.addRev)}`,
                         },
                         {
-                          label: "Mejora respuesta",
+                          label: t("calculator.responseImprove"),
                           icon: Clock,
                           val: `–${calc.respImprove}%`,
                         },
                         {
-                          label: "AI Score",
+                          label: t("calculator.aiScore"),
                           icon: BarChart3,
                           val: `${calc.score}/100`,
                         },
@@ -2601,7 +2616,7 @@ export function Calculator({ id }: CalculatorProps) {
                         letterSpacing: "0.15em",
                       }}
                     >
-                      13 / 13
+                      {t("calculator.step13.stepNum")}
                     </motion.p>
                     <motion.h2
                       initial={{
@@ -2625,9 +2640,9 @@ export function Calculator({ id }: CalculatorProps) {
                         lineHeight: 1.15,
                       }}
                     >
-                      Desbloquea tu
+                      {t("calculator.step13.title")}
                       <br />
-                      informe personalizado
+                      {t("calculator.step13.title2")}
                     </motion.h2>
                     <motion.p
                       initial={{
@@ -2645,7 +2660,7 @@ export function Calculator({ id }: CalculatorProps) {
                       className="text-[#0B0B0B]/30 mb-10"
                       style={{ fontSize: "0.9rem" }}
                     >
-                      Solo necesitamos esto. Nada más.
+                      {t("calculator.step13.sub")}
                     </motion.p>
                     <div className="max-w-[440px] space-y-4">
                       <motion.div
@@ -2696,7 +2711,7 @@ export function Calculator({ id }: CalculatorProps) {
                       >
                         <input
                           type="email"
-                          placeholder="tu@email.com"
+                          placeholder={t("calc.emailPlaceholder")}
                           value={email}
                           onChange={(e) => {
                             setEmail(e.target.value);
@@ -2765,7 +2780,7 @@ export function Calculator({ id }: CalculatorProps) {
                           fontWeight: 500,
                         }}
                       >
-                        {sending ? "Enviando…" : "Desbloquear informe"}
+                        {sending ? t("calculator.sending") : t("calculator.unlockBtn")}
                       </motion.button>
                       <motion.p
                         initial={{ opacity: 0 }}
@@ -2777,7 +2792,7 @@ export function Calculator({ id }: CalculatorProps) {
                         className="text-[#0B0B0B]/20 text-center"
                         style={{ fontSize: "0.68rem" }}
                       >
-                        Sin spam · Informe en 30 s · GDPR
+                        {t("calculator.gdprNote")}
                       </motion.p>
                     </div>
                   </div>
@@ -2836,7 +2851,7 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.15,
                     }}
                   >
-                    ¡Listo, {name || "ahí lo tienes"}!
+                    {t("calculator.doneTitle", { name: name || t("calculator.doneFallback") })}
                   </motion.h2>
                   <motion.p
                     initial={{
@@ -2851,7 +2866,7 @@ export function Calculator({ id }: CalculatorProps) {
                     className="text-[#0B0B0B]/40 mb-8"
                     style={{ fontSize: "0.95rem" }}
                   >
-                    Informe enviado a{" "}
+                    {t("calculator.reportSentTo")}{" "}
                     <span
                       className="text-[#0B0B0B]"
                       style={{ fontWeight: 500 }}
@@ -2924,8 +2939,8 @@ export function Calculator({ id }: CalculatorProps) {
                         }
                       />
                       {downloading
-                        ? "Generando..."
-                        : "Descargar PDF"}
+                        ? t("calculator.generating")
+                        : t("calculator.downloadPdf")}
                     </motion.button>
                     </div>
                   </motion.div>
@@ -2958,18 +2973,18 @@ export function Calculator({ id }: CalculatorProps) {
                     <EmailReport
                       name={name}
                       email={email}
-                      role={role}
-                      employees={employees}
-                      clients={clients}
-                      upselling={upselling}
-                      memoryDecisions={memoryDecisions}
-                      absence={absence}
-                      lostTime={lostTime}
-                      manualWork={manualWork}
-                      profitVisibility={profitVisibility}
-                      opportunities={opportunities}
-                      doubleClients={doubleClients}
-                      mainDisorder={mainDisorder}
+                      role={role ? t(`calculator.step1.${role}`) : ""}
+                      employees={employees ? t(`calculator.step2.${employees}`) : ""}
+                      clients={clients ? t(`calculator.step3.${clients}`) : ""}
+                      upselling={upselling ? t(`calculator.step4.${upselling}`) : ""}
+                      memoryDecisions={memoryDecisions ? t(`calculator.step5.${memoryDecisions}`) : ""}
+                      absence={absence ? t(`calculator.step6.${absence}`) : ""}
+                      lostTime={lostTime ? t(`calculator.step7.${lostTime}`) : ""}
+                      manualWork={manualWork ? t(`calculator.step8.${manualWork}`) : ""}
+                      profitVisibility={profitVisibility ? t(`calculator.step9.${profitVisibility}`) : ""}
+                      opportunities={opportunities ? t(`calculator.step10.${opportunities}`) : ""}
+                      doubleClients={doubleClients ? t(`calculator.step11.${doubleClients}`) : ""}
+                      mainDisorder={mainDisorder ? t(`calculator.step12.${mainDisorder}`) : ""}
                     />
                   </div>
                 </motion.div>
@@ -3022,7 +3037,7 @@ export function Calculator({ id }: CalculatorProps) {
                 }`}
                 style={{ fontSize: "0.88rem", fontWeight: 500 }}
               >
-                Siguiente <ArrowRight size={16} />
+                {t("calculator.next")} <ArrowRight size={16} />
               </motion.button>
               </div>
             )}
@@ -3043,7 +3058,7 @@ export function Calculator({ id }: CalculatorProps) {
               className="tracking-[0.2em] text-[#0B0B0B]/25"
               style={{ fontSize: "0.6rem", fontWeight: 500 }}
             >
-              {done ? "TU INFORME" : "VISTA PREVIA"}
+              {done ? t("calculator.yourReport") : t("calculator.preview")}
             </span>
             <span
               className="text-[#0B0B0B]/20"
@@ -3113,22 +3128,22 @@ export function Calculator({ id }: CalculatorProps) {
                   <div className="space-y-4 mb-6">
                     {[
                       {
-                        label: "Ahorro / mes",
+                        label: t("calculator.savingsMonth"),
                         icon: Euro,
                         val: `€ ${fmt(calc.monthlySav)}`,
                       },
                       {
-                        label: "Ingreso adicional",
+                        label: t("calculator.additionalRev"),
                         icon: TrendingUp,
                         val: `€ ${fmt(calc.addRev)}`,
                       },
                       {
-                        label: "Mejora respuesta",
+                        label: t("calculator.responseImprove"),
                         icon: Clock,
                         val: `–${calc.respImprove}%`,
                       },
                       {
-                        label: "AI Score",
+                        label: t("calculator.aiScore"),
                         icon: BarChart3,
                         val: `${calc.score}/100`,
                       },
@@ -3239,34 +3254,34 @@ export function Calculator({ id }: CalculatorProps) {
                   <div className="space-y-4 mb-6">
                     {[
                       {
-                        label: "Ahorro operativo / mes",
+                        label: t("calculator.opSavingsMonth"),
                         val: `€ ${fmt(calc.monthlySav)}`,
-                        sub: `${calc.hrsSaved}h liberadas × ${costH}€/h × overhead equipo`,
+                        sub: t("calc.subSavings", { hours: calc.hrsSaved, cost: costH }),
                         icon: Euro,
                       },
                       {
-                        label: "Ingreso adicional / mes",
+                        label: t("calculator.addRevMonth"),
                         val: `€ ${fmt(calc.addRev)}`,
-                        sub: `${fmt(leads)} leads × boost conv. × €${fmtTicket(avgTicket)} ticket`,
+                        sub: t("calc.subRevenue", { leads: fmt(leads), ticket: fmtTicket(avgTicket) }),
                         icon: TrendingUp,
                       },
                       {
-                        label: "Tiempo respuesta",
+                        label: t("calculator.responseTime"),
                         val: `${respTime} → ${calc.newResp} min`,
-                        sub: `–${calc.respImprove}% · media ${sector}: ${({ Ecommerce: 35, SaaS: 20, Agencia: 45, Servicios: 55, Salud: 30, Inmobiliaria: 75, Logística: 50, Otros: 40 } as Record<string, number>)[sector] || 40}min`,
+                        sub: `–${calc.respImprove}% · ${t("calc.media")} ${sector}: ${({ Ecommerce: 35, SaaS: 20, Agencia: 45, Servicios: 55, Salud: 30, Inmobiliaria: 75, Logística: 50, Otros: 40 } as Record<string, number>)[sector] || 40}min`,
                         icon: Clock,
                       },
                       {
-                        label: "AI Score",
+                        label: t("calculator.aiScore"),
                         val: `${calc.score}/100`,
                         sub:
                           calc.score >= 75
-                            ? "Muy alto potencial"
+                            ? t("calculator.veryHighPotential")
                             : calc.score >= 55
-                              ? "Alto potencial"
+                              ? t("calculator.highPotential")
                               : calc.score >= 35
-                                ? "Moderado"
-                                : "Inicial",
+                                ? t("calculator.moderate")
+                                : t("calculator.initial"),
                         icon: BarChart3,
                       },
                     ].map((m, i) => (
@@ -3339,7 +3354,7 @@ export function Calculator({ id }: CalculatorProps) {
                         letterSpacing: "0.12em",
                       }}
                     >
-                      IMPACTO TOTAL / MES
+                      {t("calculator.totalImpactMonth")}
                     </p>
                     <p
                       style={{
@@ -3353,7 +3368,7 @@ export function Calculator({ id }: CalculatorProps) {
                       className="text-white/30 mt-1"
                       style={{ fontSize: "0.65rem" }}
                     >
-                      ≈ € {fmt(calc.annual)}/año ·{" "}
+                      ≈ € {fmt(calc.annual)}{t("calculator.perYear")} ·{" "}
                       {(
                         (calc.annual /
                           (REVENUES.find(
@@ -3361,7 +3376,7 @@ export function Calculator({ id }: CalculatorProps) {
                           )?.value || 300000)) *
                         100
                       ).toFixed(1)}
-                      % de tu facturación
+                      % {t("calculator.ofRevenue")}
                     </p>
                     <p
                       className="text-white/20 mt-2"
@@ -3370,8 +3385,8 @@ export function Calculator({ id }: CalculatorProps) {
                         lineHeight: 1.5,
                       }}
                     >
-                      €{fmt(calc.monthlySav)} ahorro + €
-                      {fmt(calc.addRev)} ingresos adicionales
+                      €{fmt(calc.monthlySav)} {t("calculator.savingsPlusRev")}
+                      {fmt(calc.addRev)} {t("calculator.additionalRevenue")}
                     </p>
                   </motion.div>
 
@@ -3385,25 +3400,24 @@ export function Calculator({ id }: CalculatorProps) {
                       lineHeight: 1.6,
                     }}
                   >
-                    * Estimaciones basadas en benchmarks del
-                    sector {sector}, eficiencia AI (
-                    {Math.round(
-                      (
-                        {
-                          SaaS: 1.15,
-                          Ecommerce: 1.1,
-                          Logística: 1.08,
-                          Agencia: 1.05,
-                          Servicios: 1.0,
-                          Inmobiliaria: 0.95,
-                          Salud: 0.92,
-                          Otros: 1.0,
-                        } as Record<string, number>
-                      )[sector] * 100 || 100,
-                    )}
-                    %)
-                    {usesAI ? ", descontando IA existente" : ""}
-                    .
+                    {t("calculator.estimationNote", {
+                      sector: sector || "—",
+                      efficiency: Math.round(
+                        (
+                          {
+                            SaaS: 1.15,
+                            Ecommerce: 1.1,
+                            Logística: 1.08,
+                            Agencia: 1.05,
+                            Servicios: 1.0,
+                            Inmobiliaria: 0.95,
+                            Salud: 0.92,
+                            Otros: 1.0,
+                          } as Record<string, number>
+                        )[sector] * 100 || 100,
+                      ),
+                      aiNote: usesAI ? t("calculator.discountExisting") : "",
+                    })}
                   </motion.p>
                 </motion.div>
               )}

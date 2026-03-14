@@ -6,9 +6,10 @@ import { Menu, X } from "lucide-react";
 import logoImg from "@/assets/dd0f90164673663df94faa349662ec5a4dc60874.png";
 
 export function Header() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const isEn = i18n.language === "en";
 
   return (
     <motion.header
@@ -48,6 +49,25 @@ export function Header() {
               {item.label}
             </motion.a>
           ))}
+          <span className="flex items-center gap-1 text-[#0B0B0B]/40" style={{ fontSize: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={() => i18n.changeLanguage("es")}
+              className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${!isEn ? "bg-[#0B0B0B] text-white" : "hover:bg-[#0B0B0B]/10"}`}
+              aria-label="Español"
+            >
+              {t("header.langEs")}
+            </button>
+            <span className="opacity-50">|</span>
+            <button
+              type="button"
+              onClick={() => i18n.changeLanguage("en")}
+              className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${isEn ? "bg-[#0B0B0B] text-white" : "hover:bg-[#0B0B0B]/10"}`}
+              aria-label="English"
+            >
+              {t("header.langEn")}
+            </button>
+          </span>
           <motion.button
             initial={{ opacity: 0, filter: "blur(6px)" }}
             animate={{ opacity: 1, filter: "blur(0px)" }}

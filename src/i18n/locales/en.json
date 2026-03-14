@@ -5,7 +5,9 @@
     "cases": "Process",
     "contact": "Contact",
     "calculate": "Calculate",
-    "calculateArrow": "Calculate →"
+    "calculateArrow": "Calculate →",
+    "langEn": "EN",
+    "langEs": "ES"
   },
   "hero": {
     "badge": "Artificial intelligence applied to business",
@@ -158,6 +160,165 @@
     "Más ventas": "More sales",
     "Mejor soporte": "Better support",
     "Acelerar procesos": "Accelerate processes"
+  },
+  "calculator": {
+    "step0": {
+      "intro1": "There's too much hype when people talk about AI.",
+      "intro2": "We're not here to sell hype. We're here to look at your company with",
+      "honesty": "honesty",
+      "question": "If you had to fix one part of your company today, what would it be?",
+      "cta": "Start diagnosis"
+    },
+    "step1": {
+      "stepNum": "01 / 12",
+      "intro": "Before we start, I need to understand where you're looking at the company from.",
+      "title": "What's your role today?",
+      "roleCeo": "CEO / founder",
+      "roleDireccion": "Management",
+      "roleOps": "Operations",
+      "roleTech": "Technology",
+      "roleOtro": "Other"
+    },
+    "step2": {
+      "stepNum": "02 / 12",
+      "intro": "Running a 5-person company isn't the same as running one with 200.",
+      "title": "How many people work in your company today?",
+      "e1_10": "1–10",
+      "e11_50": "11–50",
+      "e51_200": "51–200",
+      "e200": "+200"
+    },
+    "step3": {
+      "stepNum": "03 / 12",
+      "title": "How many active customers does your company have today?",
+      "c1_10": "1–10",
+      "c11_50": "11–50",
+      "c51_200": "51–200",
+      "c201_1000": "201–1000",
+      "c1000": "+1000"
+    },
+    "step4": {
+      "stepNum": "04 / 12",
+      "title": "Are you really making the most of upselling or cross-selling opportunities?",
+      "sub": "Many companies have customers. Fewer companies unlock their full potential.",
+      "yesClear": "Yes, with a clear system",
+      "sometimes": "Sometimes",
+      "little": "Very little",
+      "no": "Not really"
+    },
+    "step5": {
+      "stepNum": "05 / 12",
+      "title": "How many times this week did you make an important decision based on what you remember, not what you know?",
+      "sub": "We all do it. The problem is when it becomes the system.",
+      "rarely": "Almost never",
+      "sometimes": "Sometimes",
+      "often": "Quite often",
+      "tooMany": "Too many times"
+    },
+    "step6": {
+      "stepNum": "06 / 12",
+      "title": "If you were away from operations for two weeks starting tomorrow…",
+      "sub": "It's not a people problem. It's how the system is built.",
+      "same": "It would run the same",
+      "adjustments": "There'd be some adjustments",
+      "slowdown": "It would slow down",
+      "depends": "It depends on me"
+    },
+    "step7": {
+      "stepNum": "07 / 12",
+      "title": "Does your team waste time searching for information that already exists?",
+      "sub": "Scattered knowledge is one of the most expensive invisible costs in a company.",
+      "rarely": "Almost never",
+      "sometimes": "Sometimes",
+      "quite": "Quite a bit",
+      "tooMuch": "Too much"
+    },
+    "step8": {
+      "stepNum": "08 / 12",
+      "title": "How much of your team's work is still done manually?",
+      "sub": "When something shouldn't be done manually and still is, the cost is already there.",
+      "almostNone": "Almost none",
+      "some": "Some",
+      "quite": "Quite a bit",
+      "tooMuch": "Too much"
+    },
+    "step9": {
+      "stepNum": "09 / 12",
+      "title": "Do you have clear visibility on which customers, products or services generate the most profitability?",
+      "sub": "Many companies sense it. Few see it clearly.",
+      "yesClear": "Yes, with clear data",
+      "moreOrLess": "More or less",
+      "intuition": "We have a feeling",
+      "dontKnow": "We don't know"
+    },
+    "step10": {
+      "stepNum": "10 / 12",
+      "title": "When a business opportunity comes up…",
+      "sub": "Many opportunities are lost not for lack of interest, but for lack of system.",
+      "fast": "We execute fast",
+      "sometimes": "We sometimes get there",
+      "hard": "We struggle to react",
+      "late": "We often get there late"
+    },
+    "step11": {
+      "stepNum": "11 / 12",
+      "title": "If you doubled customers or volume tomorrow…",
+      "sub": "Most companies grow to the point where their processes hold them back.",
+      "ok": "We'd hold up fine",
+      "adjustments": "With some adjustments",
+      "complicated": "It'd get complicated",
+      "break": "It'd break"
+    },
+    "step12": {
+      "stepNum": "12 / 12",
+      "title": "If you could fix just one mess in your company this week, what would it be?",
+      "sub": "This one matters most. Because you probably already know the answer.",
+      "control": "More control",
+      "freeTeam": "Free up the team",
+      "opportunities": "Not miss opportunities",
+      "processes": "Tidy processes",
+      "scale": "Scale without breaking"
+    },
+    "step13": {
+      "stepNum": "13 / 13",
+      "title": "Unlock your",
+      "title2": "personalized report",
+      "sub": "We just need this. Nothing more."
+    },
+    "prev": "Previous",
+    "next": "Next",
+    "invalidEmail": "Invalid email",
+    "sending": "Sending…",
+    "unlockBtn": "Unlock report",
+    "gdprNote": "No spam · Report in 30s · GDPR",
+    "doneTitle": "Done, {{name}}!",
+    "doneFallback": "there you go",
+    "reportSentTo": "Report sent to",
+    "bookCall": "Book a call",
+    "generating": "Generating...",
+    "downloadPdf": "Download PDF",
+    "emailPreviewHint": "Email preview",
+    "savingsMonth": "Savings / mo.",
+    "additionalRev": "Additional revenue",
+    "responseImprove": "Response improvement",
+    "aiScore": "AI Score",
+    "totalImpactMonth": "TOTAL IMPACT / MONTH",
+    "unlockHint": "Complete all questions to unlock your results.",
+    "yourReport": "YOUR REPORT",
+    "preview": "PREVIEW",
+    "opSavingsMonth": "Operational savings / mo.",
+    "addRevMonth": "Additional revenue / mo.",
+    "responseTime": "Response time",
+    "veryHighPotential": "Very high potential",
+    "highPotential": "High potential",
+    "moderate": "Moderate",
+    "initial": "Initial",
+    "estimationNote": "* Estimates based on {{sector}} sector benchmarks, AI efficiency ({{efficiency}}%){{aiNote}}.",
+    "discountExisting": ", discounting existing AI",
+    "perYear": "/yr",
+    "ofRevenue": "of your revenue",
+    "savingsPlusRev": "savings + €",
+    "additionalRevenue": "additional revenue"
   },
   "calc": {
     "and": "and",

@@ -5,7 +5,9 @@
     "cases": "Proceso",
     "contact": "Contacto",
     "calculate": "Calcular",
-    "calculateArrow": "Calcular →"
+    "calculateArrow": "Calcular →",
+    "langEn": "EN",
+    "langEs": "ES"
   },
   "hero": {
     "badge": "Inteligencia artificial aplicada a negocio",
@@ -158,6 +160,165 @@
     "Más ventas": "Más ventas",
     "Mejor soporte": "Mejor soporte",
     "Acelerar procesos": "Acelerar procesos"
+  },
+  "calculator": {
+    "step0": {
+      "intro1": "Hay demasiado humo cuando se habla de IA.",
+      "intro2": "Nosotros no venimos a vender humo. Venimos a mirar tu empresa con",
+      "honesty": "honestidad",
+      "question": "Si tuvieras que curar una parte de tu empresa hoy, ¿cuál sería?",
+      "cta": "Empezar diagnóstico"
+    },
+    "step1": {
+      "stepNum": "01 / 12",
+      "intro": "Antes de empezar, necesito entender desde dónde miras la empresa.",
+      "title": "¿Cuál es tu rol hoy?",
+      "roleCeo": "CEO / fundador",
+      "roleDireccion": "Dirección",
+      "roleOps": "Operaciones",
+      "roleTech": "Tecnología",
+      "roleOtro": "Otro"
+    },
+    "step2": {
+      "stepNum": "02 / 12",
+      "intro": "No es lo mismo ordenar una empresa de 5 personas que una de 200.",
+      "title": "¿Cuántas personas trabajan hoy en tu empresa?",
+      "e1_10": "1–10",
+      "e11_50": "11–50",
+      "e51_200": "51–200",
+      "e200": "+200"
+    },
+    "step3": {
+      "stepNum": "03 / 12",
+      "title": "¿Cuántos clientes activos tiene hoy tu empresa?",
+      "c1_10": "1–10",
+      "c11_50": "11–50",
+      "c51_200": "51–200",
+      "c201_1000": "201–1000",
+      "c1000": "+1000"
+    },
+    "step4": {
+      "stepNum": "04 / 12",
+      "title": "¿Estás aprovechando de verdad las oportunidades de upselling o cross-selling?",
+      "sub": "Muchas empresas tienen clientes. Menos empresas activan todo su potencial.",
+      "yesClear": "Sí, con sistema claro",
+      "sometimes": "Algunas veces",
+      "little": "Muy poco",
+      "no": "No realmente"
+    },
+    "step5": {
+      "stepNum": "05 / 12",
+      "title": "¿Cuántas veces esta semana tomaste una decisión importante basándote en lo que recuerdas, y no en lo que sabes?",
+      "sub": "Todos lo hacemos. El problema es cuando se convierte en el sistema.",
+      "rarely": "Casi nunca",
+      "sometimes": "A veces",
+      "often": "Bastante a menudo",
+      "tooMany": "Demasiadas veces"
+    },
+    "step6": {
+      "stepNum": "06 / 12",
+      "title": "Si mañana te ausentaras dos semanas de la operativa…",
+      "sub": "No es un problema de las personas. Es cómo está construido el sistema.",
+      "same": "Funcionaría igual",
+      "adjustments": "Habría ajustes",
+      "slowdown": "Se ralentizaría",
+      "depends": "Depende de mí"
+    },
+    "step7": {
+      "stepNum": "07 / 12",
+      "title": "¿Tu equipo pierde tiempo buscando información que ya existe?",
+      "sub": "El conocimiento disperso es uno de los costes invisibles más caros de una empresa.",
+      "rarely": "Casi nunca",
+      "sometimes": "A veces",
+      "quite": "Bastante",
+      "tooMuch": "Demasiado"
+    },
+    "step8": {
+      "stepNum": "08 / 12",
+      "title": "¿Cuánto trabajo de tu equipo sigue haciéndose a mano?",
+      "sub": "Cuando algo no debería hacerse manualmente y sigue haciéndose así, el coste ya existe.",
+      "almostNone": "Casi nada",
+      "some": "Algo",
+      "quite": "Bastante",
+      "tooMuch": "Demasiado"
+    },
+    "step9": {
+      "stepNum": "09 / 12",
+      "title": "¿Tienes visibilidad clara de qué clientes, productos o servicios generan más rentabilidad?",
+      "sub": "Muchas empresas lo intuyen. Pocas lo ven con claridad.",
+      "yesClear": "Sí, con datos claros",
+      "moreOrLess": "Más o menos",
+      "intuition": "Lo intuimos",
+      "dontKnow": "No lo sabemos"
+    },
+    "step10": {
+      "stepNum": "10 / 12",
+      "title": "Cuando aparece una oportunidad de negocio…",
+      "sub": "Muchas oportunidades no se pierden por falta de interés, sino por falta de sistema.",
+      "fast": "La ejecutamos rápido",
+      "sometimes": "A veces llegamos",
+      "hard": "Nos cuesta reaccionar",
+      "late": "Solemos llegar tarde"
+    },
+    "step11": {
+      "stepNum": "11 / 12",
+      "title": "Si mañana duplicaras clientes o volumen…",
+      "sub": "La mayoría de empresas crecen hasta el punto en que sus procesos las frenan.",
+      "ok": "Aguantaríamos bien",
+      "adjustments": "Con algunos ajustes",
+      "complicated": "Se complicaría",
+      "break": "Se rompería"
+    },
+    "step12": {
+      "stepNum": "12 / 12",
+      "title": "Si pudieras resolver un solo desorden en tu empresa esta semana, ¿cuál sería?",
+      "sub": "Esta es la más importante. Porque seguramente ya sabes la respuesta.",
+      "control": "Tener más control",
+      "freeTeam": "Liberar al equipo",
+      "opportunities": "No perder oportunidades",
+      "processes": "Ordenar procesos",
+      "scale": "Escalar sin romper"
+    },
+    "step13": {
+      "stepNum": "13 / 13",
+      "title": "Desbloquea tu",
+      "title2": "informe personalizado",
+      "sub": "Solo necesitamos esto. Nada más."
+    },
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "invalidEmail": "Email no válido",
+    "sending": "Enviando…",
+    "unlockBtn": "Desbloquear informe",
+    "gdprNote": "Sin spam · Informe en 30 s · GDPR",
+    "doneTitle": "¡Listo, {{name}}!",
+    "doneFallback": "ahí lo tienes",
+    "reportSentTo": "Informe enviado a",
+    "bookCall": "Reservar llamada",
+    "generating": "Generando...",
+    "downloadPdf": "Descargar PDF",
+    "emailPreviewHint": "Vista previa del email",
+    "savingsMonth": "Ahorro / mes",
+    "additionalRev": "Ingreso adicional",
+    "responseImprove": "Mejora respuesta",
+    "aiScore": "AI Score",
+    "totalImpactMonth": "IMPACTO TOTAL / MES",
+    "unlockHint": "Completa todas las preguntas para desbloquear tus resultados.",
+    "yourReport": "TU INFORME",
+    "preview": "VISTA PREVIA",
+    "opSavingsMonth": "Ahorro operativo / mes",
+    "addRevMonth": "Ingreso adicional / mes",
+    "responseTime": "Tiempo respuesta",
+    "veryHighPotential": "Muy alto potencial",
+    "highPotential": "Alto potencial",
+    "moderate": "Moderado",
+    "initial": "Inicial",
+    "estimationNote": "* Estimaciones basadas en benchmarks del sector {{sector}}, eficiencia AI ({{efficiency}}%){{aiNote}}.",
+    "discountExisting": ", descontando IA existente",
+    "perYear": "/año",
+    "ofRevenue": "de tu facturación",
+    "savingsPlusRev": "ahorro + €",
+    "additionalRevenue": "ingresos adicionales"
   },
   "calc": {
     "and": "y",
