@@ -4,6 +4,10 @@ builder = "nixpacks"
 [build.nixpacks]
 install_cmd = "npm install"
 build_cmd = "npm run build"
+nixpacksVersion = "1"
+
+[build.nixpacks.variables]
+NIXPACKS_NODE_VERSION = "20"
 
 [deploy]
 startCommand = "npm start"
