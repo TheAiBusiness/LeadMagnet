@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { EmailReport } from "./EmailReport";
 import { API_BASE, CALENDLY_URL } from "../lib/constants";
+import { trackCalculatorConversion } from "../lib/tracking";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -673,6 +674,7 @@ export function Calculator({ id }: CalculatorProps) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [done, setDone] = useState(false);
+  const conversionFiredRef = useRef(false); // guard: fire the Ads conversion only once
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
 
@@ -1257,6 +1259,16 @@ export function Calculator({ id }: CalculatorProps) {
     if (step === 1 && !sector)
       presetsAppliedRef.current = false;
   }, [step, sector]);
+
+  /* Google Ads "Calculadora completada" conversion: fire once, when the final
+     "¡Listo!" screen renders (done === true). The ref guard prevents re-firing
+     on re-renders or if the user resets and completes again in the same session. */
+  useEffect(() => {
+    if (done && !conversionFiredRef.current) {
+      conversionFiredRef.current = true;
+      trackCalculatorConversion();
+    }
+  }, [done]);
 
   const canNext = () => {
     if (step === 0) return true; // Pantalla inicial
