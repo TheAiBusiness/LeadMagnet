@@ -1,35 +1,46 @@
 /**
- * Google Ads conversion tracking.
+ * Ad-platform conversion tracking for the calculator.
  *
- * The base Google tag (gtag.js) lives in index.html — it loads gtag and runs
- * `gtag('config', 'AW-18196431700')`, which by itself only tracks page views and
- * remarketing. This module fires the individual *conversion actions* on top of it.
+ * The base tags live in index.html and only track page views / remarketing on
+ * their own:
+ *   • Google Ads — gtag.js, `gtag('config', 'AW-18196431700')`.
+ *   • LinkedIn   — Insight Tag, partner id 9227658.
+ * This module fires the individual *conversion actions* on top of those bases.
  */
 
-// gtag.js attaches `gtag` / `dataLayer` to window at runtime. Declared here (next
-// to its only use) so the type resolves even without a project-wide tsconfig.
+// gtag.js / LinkedIn Insight Tag attach these to window at runtime. Declared here
+// (next to their only use) so the types resolve even without a project-wide tsconfig.
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
+    lintrk?: (action: string, data?: Record<string, unknown>) => void;
   }
 }
 
 /**
- * "Calculadora completada" conversion action.
- * Value is the Google Ads `send_to` target (account ID + conversion label) taken
- * from the event snippet in Google Ads → Conversions.
+ * "Calculadora completada" Google Ads conversion action.
+ * Value is the `send_to` target (account ID + conversion label) from the event
+ * snippet in Google Ads → Conversions.
  */
-const CALCULATOR_CONVERSION_SEND_TO = "AW-18196431700/10JBCIibzbUcENSG3uRD";
+const GOOGLE_ADS_CONVERSION_SEND_TO = "AW-18196431700/10JBCIibzbUcENSG3uRD";
+
+/** "Calculadora completada" LinkedIn conversion id (Campaign Manager). */
+const LINKEDIN_CONVERSION_ID = 26852660;
 
 /**
- * Fires the "Calculadora completada" Google Ads conversion.
+ * Fires the "Calculadora completada" conversion on every connected ad platform
+ * (Google Ads + LinkedIn).
  *
- * Safe to call when gtag is unavailable (e.g. blocked by an ad-blocker or not yet
- * loaded): it no-ops instead of throwing. Call this exactly once, when the user
- * reaches the final "¡Listo!" screen — not on every render/page load.
+ * Each platform is guarded independently, so if one tag is blocked or not yet
+ * loaded the others still fire (and it never throws). Call this exactly once, when
+ * the user reaches the final "¡Listo!" screen — not on every render/page load.
  */
 export function trackCalculatorConversion(): void {
-  if (typeof window.gtag !== "function") return;
-  window.gtag("event", "conversion", { send_to: CALCULATOR_CONVERSION_SEND_TO });
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "conversion", { send_to: GOOGLE_ADS_CONVERSION_SEND_TO });
+  }
+  if (typeof window.lintrk === "function") {
+    window.lintrk("track", { conversion_id: LINKEDIN_CONVERSION_ID });
+  }
 }
