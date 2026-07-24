@@ -779,5 +779,17 @@
     "footer": "The AI Business · info@theaibusiness.com",
     "footerDisclaimer": "* Este diagnóstico está basado en tus respuestas y benchmarks del sector.",
     "footerDisclaimer2": "Es una herramienta orientativa para ayudarte a identificar áreas de mejora."
+  },
+  "thanks": {
+    "title": "¡Llamada confirmada!",
+    "titleNamed": "¡Llamada confirmada, {{name}}!",
+    "subtitle": "Te hemos enviado la invitación con el enlace de Google Meet. Si no la ves, revisa la carpeta de spam.",
+    "whenLabel": "Cuándo",
+    "inviteLabel": "Invitación enviada a",
+    "prepareTitle": "Para aprovechar los 30 minutos",
+    "prepare1": "Ten a mano tu informe de diagnóstico: partiremos de ahí.",
+    "prepare2": "Piensa en el proceso que más tiempo te está costando hoy.",
+    "prepare3": "Si puedes, únete desde un sitio tranquilo y con cámara.",
+    "backHome": "Volver al inicio"
   }
 }

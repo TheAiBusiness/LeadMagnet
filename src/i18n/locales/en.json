@@ -779,5 +779,17 @@
     "footer": "The AI Business · info@theaibusiness.com",
     "footerDisclaimer": "* This diagnosis is based on your answers and sector benchmarks.",
     "footerDisclaimer2": "It is an indicative tool to help you identify areas for improvement."
+  },
+  "thanks": {
+    "title": "Call confirmed!",
+    "titleNamed": "Call confirmed, {{name}}!",
+    "subtitle": "We've sent you the invite with the Google Meet link. If you can't find it, check your spam folder.",
+    "whenLabel": "When",
+    "inviteLabel": "Invite sent to",
+    "prepareTitle": "To make the most of the 30 minutes",
+    "prepare1": "Keep your diagnostic report handy — that's our starting point.",
+    "prepare2": "Think about the process costing you the most time today.",
+    "prepare3": "If you can, join from a quiet place with your camera on.",
+    "backHome": "Back to home"
   }
 }

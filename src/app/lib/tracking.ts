@@ -44,3 +44,33 @@ export function trackCalculatorConversion(): void {
     window.lintrk("track", { conversion_id: LINKEDIN_CONVERSION_ID });
   }
 }
+
+/**
+ * "Reserva llamada" conversion, fired on /gracias after Calendly redirects a
+ * confirmed booking back to us.
+ *
+ * Deliberately a *separate* conversion action from the calculator one: a booked
+ * call is worth far more than a finished quiz, and reusing the same action would
+ * double-count the same user and skew the campaign's cost per conversion.
+ *
+ * The Google Ads target defaults to the "Reserva de llamada agendada" action
+ * (Google Ads → Conversiones); the env vars allow overriding without a deploy.
+ */
+const BOOKING_SEND_TO =
+  import.meta.env.VITE_ADS_BOOKING_SEND_TO || "AW-18196431700/Qt-WCNmJ89QcENSG3uRD";
+const BOOKING_LINKEDIN_ID = Number(import.meta.env.VITE_LINKEDIN_BOOKING_ID) || 0;
+
+/** Fires the booking conversion. Call once, only for a verified booking. */
+export function trackBookingConversion(gclid?: string | null): void {
+  if (BOOKING_SEND_TO && typeof window.gtag === "function") {
+    /* gclid is passed back explicitly because the redirect from Calendly drops
+       it from the URL, leaving gtag no click id to attribute this hit to. */
+    window.gtag("event", "conversion", {
+      send_to: BOOKING_SEND_TO,
+      ...(gclid ? { gclid } : {}),
+    });
+  }
+  if (BOOKING_LINKEDIN_ID && typeof window.lintrk === "function") {
+    window.lintrk("track", { conversion_id: BOOKING_LINKEDIN_ID });
+  }
+}

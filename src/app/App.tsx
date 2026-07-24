@@ -1,8 +1,13 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router";
 import { router } from "./routes";
+import { captureGclid } from "./lib/attribution";
 
 export default function App() {
+  /* Stash the ad click id before the user navigates away to Calendly — the
+     "gracias" page reads it back on the way in. */
+  useEffect(captureGclid, []);
+
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
